@@ -5,6 +5,8 @@ from flask_bcrypt import Bcrypt
 import jwt
 import datetime
 from functools import wraps
+import smtplib
+from email.mime.text import MIMEText
 
 def get_db():
     conn = sqlite3.connect("database.db")
@@ -20,7 +22,8 @@ def create_user_table():
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT,
         email TEXT UNIQUE,
-        password TEXT
+        password TEXT,
+        is_verified INTEGER DEFAULT 0
     )
     """)
 
@@ -34,6 +37,25 @@ CORS(app)
 bcrypt = Bcrypt(app)
 
 SECRET_KEY = "supersecretkey"
+EMAIL_SENDER = "@gmail.com"
+EMAIL_PASSWORD = ""
+
+#Sending verification Email
+
+def send_verification_email(email, link):
+    msg = MIMEText(f"Click this link to verify your account:\n\n{link}")
+    msg["Subject"] = "Verify Your Account"
+    msg["From"] = EMAIL_SENDER
+    msg["To"] = email
+
+    server = smtplib.SMTP("smtp.gmail.com", 587)
+    server.starttls()
+    server.login(EMAIL_SENDER, EMAIL_PASSWORD)
+    server.sendmail(EMAIL_SENDER, email, msg.as_string())
+    server.quit()
+
+
+#registering a new user 
 
 @app.route("/register", methods=["POST"])
 def register():
@@ -54,9 +76,48 @@ def register():
             (name, email, hashed_password)
         )
         db.commit()
-        return jsonify({"message": "User registered successfully"})
+
+        # Generate verification token
+        verification_token = jwt.encode({
+            "email": email,
+            "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)
+        }, SECRET_KEY, algorithm="HS256")
+
+        verification_link = f"http://127.0.0.1:5000/verify/{verification_token}"
+
+        # Send email
+        send_verification_email(email, verification_link)
+
+        return jsonify({
+            "message": "Registration successful. Check your email to verify account."
+        })
+
     except:
         return jsonify({"error": "Email already exists"}), 400
+    
+#Verifying the email
+
+@app.route("/verify/<token>")
+def verify_email(token):
+    try:
+        data = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+        email = data["email"]
+
+        db = get_db()
+        cursor = db.cursor()
+
+        cursor.execute("UPDATE users SET is_verified=1 WHERE email=?", (email,))
+        db.commit()
+
+        return """
+        <h2>Email Verified Successfully!</h2>
+        <p>You can now login using the mobile app.</p>
+        """
+
+    except:
+        return jsonify({"error": "Invalid or expired verification link"}), 400
+
+
     
 
 
