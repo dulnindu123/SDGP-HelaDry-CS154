@@ -179,5 +179,39 @@ def token_required(f):
 def profile():
     return jsonify({"message": "Access granted"})
 
+
+ # ==============================
+# DEVICE DATA ENDPOINT (IoT)
+# ==============================
+
+@app.route("/api/device-data", methods=["POST"])
+def receive_device_data():
+    try:
+        data = request.json
+
+        device_id = data.get("device_id")
+        weight = data.get("weight")
+        temperature = data.get("temperature")
+        humidity = data.get("humidity")
+        light_intensity= data.get("light_intensity")
+
+        if not device_id:
+            return jsonify({"error": "Device ID is missing"}), 400
+
+        # For now just print received data
+        print("Received Data from Device:")
+        print(f"Device: {device_id}")
+        print(f"Weight: {weight}")
+        print(f"Temperature: {temperature}")
+        print(f"Humidity: {humidity}")
+        print(f"Light_Intensity: {light_intensity}")
+
+        return jsonify({
+            "message": "Data received successfully"
+        }), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500   
+
 if __name__ == "__main__":
     app.run(debug=True)
