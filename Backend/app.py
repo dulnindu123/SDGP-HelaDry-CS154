@@ -20,7 +20,6 @@ def create_user_table():
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT,
         email TEXT UNIQUE,
         password TEXT,
         is_verified INTEGER DEFAULT 0
@@ -61,7 +60,7 @@ def send_verification_email(email, link):
 def register():
     data = request.json
 
-    name = data["name"]
+    
     email = data["email"]
     password = data["password"]
 
@@ -72,8 +71,8 @@ def register():
 
     try:
         cursor.execute(
-            "INSERT INTO users (name, email, password) VALUES (?, ?, ?)",
-            (name, email, hashed_password)
+            "INSERT INTO users ( email, password) VALUES (?, ?, ?)",
+            ( email, hashed_password)
         )
         db.commit()
 
@@ -145,7 +144,7 @@ def login():
             "token": token,
             "user": {
                 "id": user["id"],
-                "name": user["name"],
+                
                 "email": user["email"]
             }
         })
