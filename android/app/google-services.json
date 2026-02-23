@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "762967530894",
+    "firebase_url": "https://solar-dryer-iot-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "solar-dryer-iot",
+    "storage_bucket": "solar-dryer-iot.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:762967530894:android:38d16c6e0db5fc037b98df",
+        "android_client_info": {
+          "package_name": "com.example.heladry"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA7Md17-ZOkO0VMVyJRwvditlSbPEjgfa8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
