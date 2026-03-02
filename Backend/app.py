@@ -1,11 +1,12 @@
 from flask import Flask
-from config import Config
-from extensions import init_firebase
 
-# Import route blueprints
-from routes.device_routes import device_bp
-from routes.sensor_routes import sensor_bp
-from routes.session_routes import session_bp
+from .config import Config
+from .extensions import init_firebase
+
+from .routes.device_routes import device_bp
+from .routes.sensor_routes import sensor_bp
+from .routes.session_routes import session_bp
+
 
 def create_app():
     app = Flask(__name__)
@@ -25,7 +26,6 @@ def create_app():
 app = create_app()
 
 if __name__ == "__main__":
-    app.run(debug=True)
-
+    app.run(debug=app.config["DEBUG"])
 
 

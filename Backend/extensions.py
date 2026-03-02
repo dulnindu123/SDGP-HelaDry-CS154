@@ -5,5 +5,5 @@ def init_firebase(cert_path):
     if not firebase_admin._apps:
         cred = credentials.Certificate(cert_path)
         firebase_admin.initialize_app(cred, {
-            "databaseURL": ""
+            "databaseURL": "https://console.firebase.google.com/u/2/project/solar-dryer-iot/database/solar-dryer-iot-default-rtdb/data"
         })
