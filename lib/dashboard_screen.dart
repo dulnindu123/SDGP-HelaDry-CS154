@@ -91,8 +91,8 @@ class DashboardScreen extends StatelessWidget {
                     final uid = user.uid;
 
                     await FirebaseDatabase.instance.ref().update({
-                      'users/$uid/devices/device_001': true,
-                      'devices/device_001/owner': uid,
+                      'users/$uid/devices/device-001': true,
+                      'devices/device-001/owner': uid,
                     });
 
                     if (context.mounted) {
@@ -101,7 +101,7 @@ class DashboardScreen extends StatelessWidget {
                       );
                     }
                   },
-                  child: const Text("Link device_001"),
+                  child: const Text("Link device-g001"),
                 ),
                 const SizedBox(height: 16),
                 // THE ACTIVE BATCH currently shows at all times not when drying active
