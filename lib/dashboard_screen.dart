@@ -5,12 +5,20 @@ import 'start_batch_screen.dart';
 import 'drying_report_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:heladry/backend/session_manager.dart';
 
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
   @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen> {
+  @override
   Widget build(BuildContext context) {
+    final session = SessionManager.currentSession;
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: Column(
@@ -91,8 +99,8 @@ class DashboardScreen extends StatelessWidget {
                     final uid = user.uid;
 
                     await FirebaseDatabase.instance.ref().update({
-                      'users/$uid/devices/device_001': true,
-                      'devices/device_001/owner': uid,
+                      'users/$uid/devices/device-001': true,
+                      'devices/device-001/owner': uid,
                     });
 
                     if (context.mounted) {
@@ -101,84 +109,83 @@ class DashboardScreen extends StatelessWidget {
                       );
                     }
                   },
-                  child: const Text("Link device_001"),
+                  child: const Text("Link device-001"),
                 ),
                 const SizedBox(height: 16),
                 // THE ACTIVE BATCH currently shows at all times not when drying active
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFFF7F0),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: Colors.orange.withValues(alpha: 0.3),
+                if (session != null && session.status == "active")
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFF7F0),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: Colors.orange.withValues(alpha: 0.3),
+                      ),
                     ),
-                  ),
-                  child: Column(
-                    children: [
-                      const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.local_fire_department,
+                    child: Column(
+                      children: [
+                        const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.local_fire_department,
+                              color: Colors.orange,
+                              size: 20,
+                            ),
+                            SizedBox(width: 8),
+                            Text(
+                              "Active Drying Batch",
+                              style: TextStyle(
+                                color: Colors.brown,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          session.crop,
+                          style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.brown,
+                          ),
+                        ),
+                        Text(
+                          "Started just now",
+                          style: const TextStyle(
                             color: Colors.orange,
-                            size: 20,
-                          ),
-                          SizedBox(width: 8),
-                          Text(
-                            "Active Drying Batch",
-                            style: TextStyle(
-                              color: Colors.brown,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      const Text(
-                        "Tomato",
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.brown,
-                        ),
-                      ),
-                      const Text(
-                        "Day 1 of drying",
-                        style: TextStyle(
-                          color: Colors.orange,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const Text(
-                        "Started: 11/17/2025",
-                        style: TextStyle(fontSize: 12, color: Colors.black45),
-                      ),
-                      const SizedBox(height: 16),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const DryingReportScreen(),
-                            ),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFFF8A00),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          child: const Text(
-                            "View Drying Report",
-                            style: TextStyle(color: Colors.white),
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const DryingReportScreen(),
+                              ),
+                            ),
+                            child: const Text("View Drying Report"),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                  const DashboardCard(
+                    color: Color(0xFFF0F9FF),
+                    borderColor: Colors.blueAccent,
+                    icon: Icons.wb_cloudy_outlined,
+                    iconColor: Colors.orangeAccent,
+                    title: "No active drying batch",
+                    subtitle: "Start a new batch to begin tracking",
+                    textColor: Colors.blueAccent,
                   ),
-                ),
 
                 // 1. Start New Batch Link
                 GestureDetector(
@@ -254,13 +261,10 @@ class DashboardScreen extends StatelessWidget {
   void _showPlaceholder(BuildContext context, String title, Color color) {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => Scaffold(
-          appBar: AppBar(title: Text(title), backgroundColor: color),
-          body: Center(child: Text("$title test")),
-        ),
-      ),
-    );
+      MaterialPageRoute(builder: (context) => const StartBatchScreen()),
+    ).then((_) {
+      setState(() {});
+    });
   }
 }
 
