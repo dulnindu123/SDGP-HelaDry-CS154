@@ -4,7 +4,7 @@ from .config import Config
 from .extensions import init_firebase
 
 from .routes.device_routes import device_bp
-from .routes.session_routes import session_bp  # remove if not implemented
+from .routes.session_routes import session_bp  
 
 
 def create_app():
