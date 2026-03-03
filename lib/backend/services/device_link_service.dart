@@ -20,4 +20,16 @@ class DeviceLinkService {
 
     await _db.ref().update(updates);
   }
+
+  Future<void> populateMockData() async {
+    final mockUid = "mock-uid-123";
+    final mockDeviceId = "device-001";
+
+    final Map<String, Object?> mockData = {
+      'users/$mockUid/devices/$mockDeviceId': true,
+      'devices/$mockDeviceId/owner': mockUid,
+    };
+
+    await _db.ref().update(mockData);
+  }
 }
