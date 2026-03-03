@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from ..middleware.auth_middleware import firebase_required
-from ..services.device_service import start_device, stop_device
+from ..services.device_services import start_device, stop_device
 from ..utils.validators import validate_temperature
 from ..utils.responses import success, error
 
