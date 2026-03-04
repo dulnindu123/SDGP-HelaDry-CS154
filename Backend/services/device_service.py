@@ -120,3 +120,34 @@ def get_user_devices(user_id):
 
     except Exception:
         return {"error": "Failed to fetch devices"}
+    
+
+def register_device(user_id, device_id, device_name=None):
+    try:
+        device_ref = db.reference(f"devices/{device_id}")
+        device = device_ref.get()
+
+        # Check if device already exists
+        if device:
+            return {"error": "Device already registered"}
+
+        timestamp = datetime.now(timezone.utc).isoformat()
+
+        device_ref.set({
+            "device_id": device_id,
+            "name": device_name if device_name else "HelaDry Device",
+            "owner": user_id,
+            "status": "idle",
+            "created_at": timestamp,
+            "updated_at": timestamp,
+            "command": None,
+            "last_seen": None
+        })
+
+        return {
+            "message": "Device registered successfully",
+            "device_id": device_id
+        }
+
+    except Exception:
+        return {"error": "Failed to register device"}
