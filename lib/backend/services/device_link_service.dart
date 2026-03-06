@@ -22,8 +22,8 @@ class DeviceLinkService {
   }
 
   Future<void> populateMockData() async {
-    final mockUid = "mock-uid-123";
-    final mockDeviceId = "device-001";
+    const mockUid = "mock-uid-123";
+    const mockDeviceId = "device-001";
 
     final Map<String, Object?> mockData = {
       'users/$mockUid/devices/$mockDeviceId': true,

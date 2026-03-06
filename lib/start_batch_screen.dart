@@ -125,12 +125,15 @@ class _StartBatchScreenState extends State<StartBatchScreen> {
                 height: 50,
                 child: ElevatedButton(
                   onPressed: selectedCrop == null ? null : () {
-                    // This is where the backend dev will connect
-                    print("Starting batch for: $selectedCrop");
-                    print("Weight: ${weightController.text}");
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text("Batch started for $selectedCrop!")),
+                      SnackBar(
+                        content: Text("Batch started for $selectedCrop! ✅"),
+                        behavior: SnackBarBehavior.floating,
+                        margin: const EdgeInsets.all(16),
+                      ),
                     );
+                    // Return to Dashboard after starting the batch
+                    Navigator.pop(context);
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF13B546),

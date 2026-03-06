@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 import 'drying_guide_screen.dart';
 import 'start_batch_screen.dart';
@@ -84,6 +85,16 @@ class DashboardScreen extends StatelessWidget {
                 ElevatedButton(
                   //
                   onPressed: () async {
+                    if (kIsWeb) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text("Device linking requires the Android app."),
+                          behavior: SnackBarBehavior.floating,
+                          margin: EdgeInsets.all(16),
+                        ),
+                      );
+                      return;
+                    }
                     try {
                       await DeviceLinkService().linkDeviceToCurrentUser(
                         'device-001',
@@ -293,13 +304,13 @@ class DashboardCard extends StatelessWidget {
         color: color,
         borderRadius: BorderRadius.circular(16),
         border: borderColor != null
-            ? Border.all(color: borderColor!.withOpacity(0.5))
+            ? Border.all(color: borderColor!.withValues(alpha: 0.5))
             : null,
       ),
       child: Column(
         children: [
           CircleAvatar(
-            backgroundColor: Colors.white.withOpacity(0.2),
+            backgroundColor: Colors.white.withValues(alpha: 0.2),
             radius: 25,
             child: Icon(icon, color: iconColor),
           ),
@@ -310,11 +321,11 @@ class DashboardCard extends StatelessWidget {
               color: textColor,
               fontSize: 18,
               fontWeight: FontWeight.bold,
-            ),git add lib/dashboard_screen.dart
+            ),
           ),
           Text(
             subtitle,
-            style: TextStyle(color: textColor.withOpacity(0.8), fontSize: 13),
+            style: TextStyle(color: textColor.withValues(alpha: 0.8), fontSize: 13),
           ),
         ],
       ),
