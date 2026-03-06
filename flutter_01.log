@@ -1,0 +1,70 @@
+Flutter crash report.
+Please report a bug at https://github.com/flutter/flutter/issues.
+
+## command
+
+flutter run
+
+## exception
+
+RPCError: ext.flutter.inspector.show: (-32603) Unexpected DWDS error for callServiceExtension: WipError -32000 Promise was collected
+
+```
+#0      new _OutstandingRequest (package:vm_service/src/vm_service.dart:268:34)
+#1      VmService._call.<anonymous closure> (package:vm_service/src/vm_service.dart:1950:25)
+#2      VmService._call (package:vm_service/src/vm_service.dart:1962:8)
+#3      VmService.callServiceExtension (package:vm_service/src/vm_service.dart:1901:14)
+#4      FlutterVmService._checkedCallServiceExtension (package:flutter_tools/src/vmservice.dart:771:28)
+#5      FlutterVmService.invokeFlutterExtensionRpcRaw (package:flutter_tools/src/vmservice.dart:790:49)
+#6      FlutterVmService._flutterToggle (package:flutter_tools/src/vmservice.dart:636:21)
+<asynchronous suspension>
+#7      ResidentHandlers.debugToggleWidgetInspector (package:flutter_tools/src/resident_runner.dart:860:9)
+<asynchronous suspension>
+#8      TerminalHandler.processTerminalInput (package:flutter_tools/src/resident_runner.dart:1906:7)
+<asynchronous suspension>
+```
+
+## flutter doctor
+
+```
+[32m[✓][39m Flutter (Channel stable, 3.41.2, on macOS 26.2 25C56 darwin-arm64, locale en-GB) [1,401ms]
+    [32m•[39m Flutter version 3.41.2 on channel stable at /opt/homebrew/share/flutter
+    [32m•[39m Upstream repository https://github.com/flutter/flutter.git
+    [32m•[39m Framework revision 90673a4eef (6 days ago), 2026-02-18 13:54:59 -0800
+    [32m•[39m Engine revision 6c0baaebf7
+    [32m•[39m Dart version 3.11.0
+    [32m•[39m DevTools version 2.54.1
+    [32m•[39m Feature flags: enable-web, enable-linux-desktop, enable-macos-desktop, enable-windows-desktop, enable-android,
+      no-enable-ios, cli-animations, enable-native-assets, omit-legacy-version-file, enable-lldb-debugging,
+      enable-uiscene-migration
+
+[31m[✗][39m Android toolchain - develop for Android devices [81ms]
+    [31m✗[39m Unable to locate Android SDK.
+      Install Android Studio from: https://developer.android.com/studio/index.html
+      On first launch it will assist you in installing the Android SDK components.
+      (or visit https://flutter.dev/to/macos-android-setup for detailed instructions).
+      If the Android SDK has been installed to a custom location, please use
+      `flutter config --android-sdk` to update to that location.
+
+
+[33m[!][39m Xcode - develop for iOS and macOS [852ms]
+    [31m✗[39m Xcode installation is incomplete; a full installation is necessary for iOS and macOS development.
+      Download at: https://developer.apple.com/xcode/
+      Or install Xcode via the App Store.
+      Once installed, run:
+        sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer
+        sudo xcodebuild -runFirstLaunch
+    [32m•[39m CocoaPods version 1.16.2
+
+[32m[✓][39m Chrome - develop for the web [28ms]
+    [32m•[39m Chrome at /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
+
+[32m[✓][39m Connected device (2 available) [81ms]
+    [32m•[39m macOS (desktop) • macos  • darwin-arm64   • macOS 26.2 25C56 darwin-arm64
+    [32m•[39m Chrome (web)    • chrome • web-javascript • Google Chrome 145.0.7632.76
+
+[32m[✓][39m Network resources [682ms]
+    [32m•[39m All expected network resources are available.
+
+[33m![39m Doctor found issues in 2 categories.
+```
