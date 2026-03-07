@@ -58,6 +58,7 @@ static const bool RELAY_ACTIVE_LOW = true;
 static const uint32_t SENSOR_READ_INTERVAL_MS = 2000;
 static const uint32_t FIREBASE_PUSH_INTERVAL_MS = 5000;
 static const uint32_t COMMAND_POLL_INTERVAL_MS = 2000;
+static const uint32_t BLE_NOTIFY_INTERVAL_MS = 1000;
 
 static const uint32_t WIFI_WAIT_MS = 15000;
 static const uint32_t PORTAL_TIMEOUT_SEC = 180;
@@ -117,6 +118,7 @@ static size_t ma_count = 0;
 static uint32_t lastSensorReadMs = 0;
 static uint32_t lastFirebasePushMs = 0;
 static uint32_t lastCommandPollMs = 0;
+static uint32_t lastBleNotifyMs = 0;
 static uint32_t lastWiFiTryMs = 0;
 
 // WiFi state
@@ -673,6 +675,29 @@ static void bleMaintainAdvertising() {
   }
 }
 
+// ========================= BLE STATE NOTIFY =========================
+static void bleNotifyState() {
+  if (!pStateChar || !bleConnected)
+    return;
+
+  String out = "{\"temp\":";
+  out += String(isnan(temp_c) ? 0 : temp_c, 1);
+  out += ",\"hum\":";
+  out += String(isnan(hum_pct) ? 0 : hum_pct, 1);
+  out += ",\"fan\":";
+  out += fan_on ? "true" : "false";
+  out += ",\"heater\":";
+  out += heater_on ? "true" : "false";
+  out += ",\"bat\":";
+  out += String(isnan(battery_v) ? 0 : battery_v, 2);
+  out += ",\"weight\":";
+  out += String(filteredWeight_g, 1);
+  out += "}";
+
+  pStateChar->setValue(out.c_str());
+  pStateChar->notify();
+}
+
 // ========================= SERIAL PRINT =========================
 static void printSensorLine() {
   Serial.print("[SENS] W=");
@@ -748,6 +773,12 @@ void loop() {
     readAllSensors();
     heaterControlLogic();
     printSensorLine();
+  }
+
+  // BLE state notifications
+  if (now - lastBleNotifyMs >= BLE_NOTIFY_INTERVAL_MS) {
+    lastBleNotifyMs = now;
+    bleNotifyState();
   }
 
   if (now - lastCommandPollMs >= COMMAND_POLL_INTERVAL_MS) {
