@@ -1,0 +1,144 @@
+============================================
+  HELADRY FLUTTER APP — GIT COMMIT COMMANDS
+  Time: 1:15 PM to 12:30 AM (28 Commits)
+============================================
+
+NOTE: Commit #1, #2, #3 are already DONE ✅
+Run all commands from: E:\flutter\flutter_application_1
+
+
+---- Commit 4 — 2:25 PM ----
+git add android/app/build.gradle.kts android/app/src/main/AndroidManifest.xml android/app/src/debug/AndroidManifest.xml android/app/src/profile/AndroidManifest.xml
+git commit -m "chore: add Android app module and manifest configuration"
+
+
+---- Commit 5 — 2:45 PM ----
+git add android/app/src/main/res/
+git commit -m "chore: add Android launcher icons and theme styles"
+
+
+---- Commit 6 — 3:05 PM ----
+git add android/app/src/main/kotlin/com/example/flutter_application_1/MainActivity.kt android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
+git commit -m "chore: add Android main activity and plugin registrant"
+
+
+---- Commit 7 — 3:25 PM ----
+git add web/index.html web/manifest.json web/favicon.png web/icons/
+git commit -m "chore: configure web platform with index.html and manifest"
+
+
+---- Commit 8 — 3:50 PM ----
+git add assets/images/logo.png
+git commit -m "feat: add app logo asset"
+
+
+---- Commit 9 — 4:10 PM ----
+git add lib/theme/app_theme.dart
+git commit -m "feat: setup app theme with light and dark mode support"
+
+
+---- Commit 10 — 4:35 PM ----
+git add lib/theme/theme_controller.dart
+git commit -m "feat: add theme controller for dynamic theme switching"
+
+
+---- Commit 11 — 4:55 PM ----
+git add lib/widgets/primary_button.dart
+git commit -m "feat: create reusable PrimaryButton widget component"
+
+
+---- Commit 12 — 5:15 PM ----
+git add lib/widgets/secondary_button.dart
+git commit -m "feat: create reusable SecondaryButton widget component"
+
+
+---- Commit 13 — 5:35 PM ----
+git add lib/widgets/app_card.dart lib/widgets/app_text_field.dart
+git commit -m "feat: create AppCard and AppTextField widget components"
+
+
+---- Commit 14 — 5:55 PM ----
+git add lib/widgets/empty_state.dart lib/widgets/mode_toggle_button.dart lib/widgets/stepper_header.dart
+git commit -m "feat: create EmptyState, ModeToggle, and StepperHeader widgets"
+
+
+---- Commit 15 — 6:20 PM ----
+git add lib/services/session_store.dart
+git commit -m "feat: implement session storage service"
+
+
+---- Commit 16 — 6:40 PM ----
+git add lib/services/mock_device_service.dart lib/services/mock_wifi_service.dart
+git commit -m "feat: add mock device and WiFi services for offline mode"
+
+
+---- Commit 17 — 7:05 PM ----
+git add lib/app/mock_data.dart
+git commit -m "feat: add mock data models and sample datasets"
+
+
+---- Commit 18 — 7:30 PM ----
+git add lib/features/auth/pages/splash_page.dart
+git commit -m "feat: implement splash screen with animated logo"
+
+
+---- Commit 19 — 7:55 PM ----
+git add lib/features/auth/pages/login_page.dart
+git commit -m "feat: implement login page with email and password auth"
+
+
+---- Commit 20 — 8:20 PM ----
+git add lib/features/auth/pages/create_account_page.dart
+git commit -m "feat: implement account creation page with form validation"
+
+
+---- Commit 21 — 8:45 PM ----
+git add lib/features/connection/pages/connection_mode_page.dart
+git commit -m "feat: implement connection mode selection page"
+
+
+---- Commit 22 — 9:10 PM ----
+git add lib/features/pair/pages/pair_device_page.dart lib/features/pair/pages/pair_success_page.dart
+git commit -m "feat: implement device pairing flow with BLE support"
+
+
+---- Commit 23 — 9:40 PM ----
+git add lib/features/wifi/pages/wifi_setup_ble_step1_page.dart lib/features/wifi/pages/wifi_setup_ble_step2_page.dart lib/features/wifi/pages/wifi_setup_ble_step3_page.dart
+git commit -m "feat: implement WiFi setup wizard (3-step BLE config)"
+
+
+---- Commit 24 — 10:10 PM ----
+git add lib/features/dashboard/pages/dashboard_page.dart
+git commit -m "feat: implement dashboard with live device monitoring UI"
+
+
+---- Commit 25 — 10:40 PM ----
+git add lib/features/controls/pages/manual_controls_page.dart lib/features/guide/pages/crop_guide_page.dart
+git commit -m "feat: implement manual controls and crop guide pages"
+
+
+---- Commit 26 — 11:10 PM ----
+git add lib/features/batch/pages/start_new_batch_page.dart lib/features/records/pages/my_records_page.dart lib/features/settings/pages/settings_page.dart lib/features/settings/pages/edit_profile_page.dart
+git commit -m "feat: implement batch tracking, records, and settings pages"
+
+
+---- Commit 27 — 11:40 PM ----
+git add lib/app/routes.dart lib/app/app.dart
+git commit -m "feat: configure app routes and root app widget"
+
+
+---- Commit 28 — 12:00 AM ----
+git add lib/main.dart test/widget_test.dart
+git commit -m "feat: add main entry point and widget test scaffold"
+
+
+============================================
+  AFTER ALL 28 COMMITS — PUSH TO GITHUB
+============================================
+
+git branch -M UI
+git push origin UI --force
+
+============================================
+  DONE! Check your GitHub repo UI branch 🎉
+============================================
