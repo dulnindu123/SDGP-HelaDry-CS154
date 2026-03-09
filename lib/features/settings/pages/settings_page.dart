@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // <--- NEW: Added Firebase Auth
 import '../../../services/session_store.dart';
 import '../../../theme/theme_controller.dart';
 import '../../../app/routes.dart';
@@ -70,9 +71,9 @@ class _SettingsPageState extends State<SettingsPage> {
                   Container(
                     width: 48,
                     height: 48,
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       shape: BoxShape.circle,
-                      color: const Color(0xFF00695C),
+                      color: Color(0xFF00695C),
                     ),
                     child: Center(
                       child: Text(
@@ -385,11 +386,15 @@ class _SettingsPageState extends State<SettingsPage> {
               width: double.infinity,
               height: 48,
               child: OutlinedButton(
-                onPressed: () {
+                onPressed: () async {
+                  // NEW: Added Firebase Sign Out logic
+                  await FirebaseAuth.instance.signOut(); 
                   session.logout();
-                  Navigator.of(
-                    context,
-                  ).pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
+                  if (mounted) {
+                    Navigator.of(
+                      context,
+                    ).pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
+                  }
                 },
                 style: OutlinedButton.styleFrom(
                   foregroundColor: const Color(0xFFEF5350),
@@ -411,6 +416,8 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  // ... (All other helper methods like _sectionTitle, _buildDeviceInfoRow, etc. remain exactly as you provided)
+  
   Widget _sectionTitle(String title, bool isDark) {
     return Text(
       title,

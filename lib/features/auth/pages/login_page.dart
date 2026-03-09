@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // Added Firebase Auth
 import '../../../services/session_store.dart';
 import '../../../app/routes.dart';
 import '../../../widgets/app_text_field.dart';
@@ -27,14 +28,81 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
+  /// Handles the Firebase Login Process
   void _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
+
     setState(() => _isLoading = true);
-    await Future.delayed(const Duration(milliseconds: 800));
-    if (!mounted) return;
-    final session = context.read<SessionStore>();
-    session.login(email: _emailController.text);
-    Navigator.of(context).pushReplacementNamed(AppRoutes.connectionMode);
+
+    try {
+      // 1. Firebase Authentication Sign In
+      final UserCredential userCredential = await FirebaseAuth.instance
+          .signInWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+
+      if (!mounted) return;
+
+      // 2. Update local session store
+      final session = context.read<SessionStore>();
+      session.login(email: userCredential.user?.email ?? _emailController.text);
+
+      // 3. Navigate to the next screen
+      Navigator.of(context).pushReplacementNamed(AppRoutes.connectionMode);
+      
+    } on FirebaseAuthException catch (e) {
+      // 4. Handle Firebase-specific errors
+      String message = 'An authentication error occurred.';
+      
+      if (e.code == 'user-not-found') {
+        message = 'No account found for this email.';
+      } else if (e.code == 'wrong-password') {
+        message = 'Incorrect password. Please try again.';
+      } else if (e.code == 'invalid-email') {
+        message = 'The email format is invalid.';
+      } else if (e.code == 'user-disabled') {
+        message = 'This user account has been disabled.';
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    } catch (e) {
+      // Generic error (e.g., no internet)
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Connection failed. Please check your network.')),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  /// Handles Forgot Password logic
+  void _handleForgotPassword() async {
+    if (_emailController.text.isEmpty || !_emailController.text.contains('@')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a valid email first.')),
+      );
+      return;
+    }
+
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(
+        email: _emailController.text.trim(),
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Password reset link sent to your email!')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error sending reset email.')),
+      );
+    }
   }
 
   @override
@@ -49,7 +117,6 @@ class _LoginPageState extends State<LoginPage> {
             key: _formKey,
             child: Column(
               children: [
-                // Top-right theme toggle
                 Align(
                   alignment: Alignment.topRight,
                   child: const ModeToggleButton(),
@@ -63,7 +130,7 @@ class _LoginPageState extends State<LoginPage> {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: isDark
-                        ? Colors.white.withValues(alpha: 0.1)
+                        ? Colors.white.withOpacity(0.1)
                         : const Color(0xFFEAF0F7),
                   ),
                   child: ClipOval(
@@ -82,7 +149,6 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 const SizedBox(height: 24),
 
-                // Title
                 Text(
                   'Welcome Back',
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
@@ -117,13 +183,13 @@ class _LoginPageState extends State<LoginPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       AppTextField(
-                        label: 'Phone Number or Email',
-                        hint: 'Enter your email or phone',
+                        label: 'Email Address',
+                        hint: 'Enter your email',
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please enter your email or phone';
+                            return 'Please enter your email';
                           }
                           return null;
                         },
@@ -149,15 +215,7 @@ class _LoginPageState extends State<LoginPage> {
                       Align(
                         alignment: Alignment.centerRight,
                         child: GestureDetector(
-                          onTap: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Forgot Password not implemented',
-                                ),
-                              ),
-                            );
-                          },
+                          onTap: _handleForgotPassword,
                           child: Text(
                             'Forgot Password?',
                             style: TextStyle(
@@ -197,9 +255,7 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     GestureDetector(
                       onTap: () {
-                        Navigator.of(
-                          context,
-                        ).pushNamed(AppRoutes.createAccount);
+                        Navigator.of(context).pushNamed(AppRoutes.createAccount);
                       },
                       child: Text(
                         'Create Account',

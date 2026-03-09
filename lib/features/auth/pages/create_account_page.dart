@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // Added Firebase Auth
 import '../../../services/session_store.dart';
 import '../../../app/routes.dart';
 import '../../../widgets/app_text_field.dart';
@@ -32,14 +33,56 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
     super.dispose();
   }
 
+  /// Handles Firebase Registration
   void _handleCreateAccount() async {
     if (!_formKey.currentState!.validate()) return;
+
     setState(() => _isLoading = true);
-    await Future.delayed(const Duration(milliseconds: 800));
-    if (!mounted) return;
-    final session = context.read<SessionStore>();
-    session.login(name: _nameController.text, email: _emailController.text);
-    Navigator.of(context).pushReplacementNamed(AppRoutes.connectionMode);
+
+    try {
+      // 1. Create user in Firebase
+      final UserCredential userCredential = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+
+      // 2. Update the user's Display Name in Firebase
+      await userCredential.user?.updateDisplayName(_nameController.text.trim());
+
+      if (!mounted) return;
+
+      // 3. Update local SessionStore
+      final session = context.read<SessionStore>();
+      session.login(
+        name: _nameController.text.trim(),
+        email: _emailController.text.trim(),
+      );
+
+      // 4. Navigate to success screen
+      Navigator.of(context).pushReplacementNamed(AppRoutes.connectionMode);
+
+    } on FirebaseAuthException catch (e) {
+      String message = 'Failed to create account.';
+
+      if (e.code == 'weak-password') {
+        message = 'The password provided is too weak.';
+      } else if (e.code == 'email-already-in-use') {
+        message = 'An account already exists for that email.';
+      } else if (e.code == 'invalid-email') {
+        message = 'The email address is not valid.';
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message), backgroundColor: Colors.redAccent),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('An unexpected error occurred.')),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -54,7 +97,6 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
             key: _formKey,
             child: Column(
               children: [
-                // Top-right theme toggle
                 Align(
                   alignment: Alignment.topRight,
                   child: const ModeToggleButton(),
@@ -68,7 +110,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: isDark
-                        ? Colors.white.withValues(alpha: 0.1)
+                        ? Colors.white.withOpacity(0.1)
                         : const Color(0xFFEAF0F7),
                   ),
                   child: ClipOval(
@@ -90,8 +132,8 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                 Text(
                   'Create Account',
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -133,13 +175,16 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                       ),
                       const SizedBox(height: 16),
                       AppTextField(
-                        label: 'Phone or Email',
-                        hint: 'Enter your email or phone',
+                        label: 'Email Address',
+                        hint: 'Enter your email',
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please enter your email or phone';
+                            return 'Please enter your email';
+                          }
+                          if (!value.contains('@')) {
+                            return 'Please enter a valid email';
                           }
                           return null;
                         },
@@ -157,6 +202,9 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Please enter a password';
+                          }
+                          if (value.length < 6) {
+                            return 'Password must be at least 6 characters';
                           }
                           return null;
                         },
