@@ -4,9 +4,39 @@ import '../../../services/session_store.dart';
 import '../../../app/routes.dart';
 import '../../../app/mock_data.dart';
 import '../../../widgets/app_card.dart';
+import '../../../backend/services/device_link_service.dart';
 
-class DashboardPage extends StatelessWidget {
+class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
+
+  @override
+  State<DashboardPage> createState() => _DashboardPageState();
+}
+
+class _DashboardPageState extends State<DashboardPage> {
+  final LiveDataService _liveDataService = LiveDataService();
+
+  double _temperature = 0.0;
+  double _humidity = 0.0;
+  int _airflow = 0;
+  bool _isLoadingLive = true;
+
+  static const String _deviceId = 'device-001';
+
+  @override
+  void initState() {
+    super.initState();
+    _liveDataService.listenToLiveData(_deviceId).listen((data) {
+      if (mounted) {
+        setState(() {
+          _temperature = data['temperature'] ?? 0.0;
+          _humidity = data['humidity'] ?? 0.0;
+          _airflow = data['airflow'] ?? 0;
+          _isLoadingLive = false;
+        });
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -116,7 +146,7 @@ class DashboardPage extends StatelessWidget {
                       vertical: 10,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.15),
+                      color: Colors.white.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
@@ -209,7 +239,7 @@ class DashboardPage extends StatelessWidget {
                     Icon(
                       Icons.wb_sunny_outlined,
                       size: 48,
-                      color: subtextColor.withValues(alpha: 0.5),
+                      color: subtextColor.withOpacity(0.5),
                     ),
                     const SizedBox(height: 12),
                     Text(
@@ -221,7 +251,7 @@ class DashboardPage extends StatelessWidget {
                       'Start a new batch to begin tracking',
                       style: TextStyle(
                         fontSize: 13,
-                        color: subtextColor.withValues(alpha: 0.7),
+                        color: subtextColor.withOpacity(0.7),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -286,7 +316,7 @@ class DashboardPage extends StatelessWidget {
                           context,
                           Icons.thermostat,
                           'Temperature',
-                          '${(metrics['temperature'] as double).toStringAsFixed(0)}°C',
+                          _isLoadingLive ? '--' : '${_temperature.toStringAsFixed(1)}°C',
                           const Color(0xFFEF5350),
                           isDark,
                         ),
@@ -297,7 +327,7 @@ class DashboardPage extends StatelessWidget {
                           context,
                           Icons.water_drop,
                           'Humidity',
-                          '${(metrics['humidity'] as double).toStringAsFixed(0)}%',
+                          _isLoadingLive ? '--' : '${_humidity.toStringAsFixed(1)}%',
                           const Color(0xFF42A5F5),
                           isDark,
                         ),
@@ -310,9 +340,9 @@ class DashboardPage extends StatelessWidget {
                       Expanded(
                         child: _buildMetricCard(
                           context,
-                          Icons.toys,
-                          'Fan Speed',
-                          '${metrics['fanSpeed']}%',
+                          Icons.air,
+                          'Airflow',
+                          _isLoadingLive ? '--' : '$_airflow',
                           const Color(0xFF66BB6A),
                           isDark,
                         ),
@@ -512,10 +542,10 @@ class DashboardPage extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: isDark
-              ? color.withValues(alpha: 0.15)
-              : color.withValues(alpha: 0.1),
+              ? color.withOpacity(0.15)
+              : color.withOpacity(0.1),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withValues(alpha: 0.3)),
+          border: Border.all(color: color.withOpacity(0.3)),
         ),
         child: Column(
           children: [
@@ -523,7 +553,7 @@ class DashboardPage extends StatelessWidget {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: color.withValues(alpha: isDark ? 0.3 : 0.15),
+                color: color.withOpacity(isDark ? 0.3 : 0.15),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: color, size: 22),

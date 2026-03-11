@@ -1,23 +1,35 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 
-class DeviceLinkService {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+// Ensure that the Firebase core package is initialized before using FirebaseDatabase.
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_application_1/firebase_options.dart'; // Updated with the correct project name.
+
+class LiveDataService {
   final FirebaseDatabase _db = FirebaseDatabase.instance;
 
-  Future<void> linkDeviceToCurrentUser(String deviceId) async {
-    final user = _auth.currentUser;
-    if (user == null) {
-      throw Exception("No logged-in user found.");
-    }
+  Stream<Map<String, dynamic>> listenToLiveData(String deviceId) {
+    final ref = _db.ref('devices/$deviceId/live');
 
-    final String uid = user.uid;
+    return ref.onValue.map((event) {
+      final data = event.snapshot.value;
 
-    final Map<String, Object?> updates = {
-      'users/$uid/devices/$deviceId': true,
-      'devices/$deviceId/owner': uid,
-    };
+      if (data == null || data is! Map) {
+        return {
+          'temperature': 0.0,
+          'humidity': 0.0,
+          'airflow': 0,
+          'updatedAt': 0,
+        };
+      }
 
-    await _db.ref().update(updates);
+      final map = Map<String, dynamic>.from(data);
+
+      return {
+        'temperature': (map['temperature'] ?? 0).toDouble(),
+        'humidity': (map['humidity'] ?? 0).toDouble(),
+        'airflow': (map['airflow'] ?? 0),
+        'updatedAt': (map['updatedAt'] ?? 0),
+      };
+    });
   }
 }
