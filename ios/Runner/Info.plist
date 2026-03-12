@@ -22,6 +22,10 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>This app needs Bluetooth to connect to the HelaDry device offline.</string>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>This app needs Bluetooth to connect to the HelaDry device offline.</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>
