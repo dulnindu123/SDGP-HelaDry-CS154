@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../../app/routes.dart';
-import '../../../app/mock_data.dart';
-import '../../../services/mock_wifi_service.dart';
+import '../../../app/routes.dart';
+import '../../../services/device_transport.dart';
+import 'dart:convert';
+import 'dart:async';
 import '../../../widgets/stepper_header.dart';
 import '../../../widgets/primary_button.dart';
 import '../../../widgets/secondary_button.dart';
@@ -15,28 +17,73 @@ class WifiSetupBleStep2Page extends StatefulWidget {
   State<WifiSetupBleStep2Page> createState() => _WifiSetupBleStep2PageState();
 }
 
+class BleWifiNetwork {
+  final String ssid;
+  final String quality;
+  final int rssi;
+
+  const BleWifiNetwork({
+    required this.ssid,
+    required this.quality,
+    required this.rssi,
+  });
+}
+
 class _WifiSetupBleStep2PageState extends State<WifiSetupBleStep2Page> {
   String _state = 'idle'; // idle, scanning, results
-  List<MockWifiNetwork> _networks = [];
+  List<BleWifiNetwork> _networks = [];
   String? _selectedSsid;
   bool _showHiddenEntry = false;
   final _hiddenSsidController = TextEditingController();
   bool _showScannedNetworks = false;
+  StreamSubscription? _ackSub;
 
   @override
   void dispose() {
     _hiddenSsidController.dispose();
+    _ackSub?.cancel();
     super.dispose();
   }
 
   void _startScan() async {
     setState(() => _state = 'scanning');
-    final networks = await MockWifiService.scanNetworks();
-    if (!mounted) return;
-    setState(() {
-      _networks = networks;
-      _state = 'results';
-      _showScannedNetworks = true;
+    
+    _ackSub?.cancel();
+    _ackSub = DeviceTransport().ble.ackStream.listen((jsonStr) {
+      try {
+        final decoded = jsonDecode(jsonStr);
+        if (decoded['cmd'] == 'SCAN_WIFI' && decoded['status'] == 'done') {
+          final nets = (decoded['networks'] as List).map((n) {
+             final rssi = n['rssi'] as int;
+             String qual = 'Weak';
+             if (rssi > -60) qual = 'Excellent';
+             else if (rssi > -70) qual = 'Good';
+             else if (rssi > -85) qual = 'Fair';
+             return BleWifiNetwork(ssid: n['ssid'], rssi: rssi, quality: qual);
+          }).toList();
+          
+          if (!mounted) return;
+          setState(() {
+            _networks = nets;
+            _state = 'results';
+            _showScannedNetworks = true;
+          });
+        } else if (decoded['cmd'] == 'SCAN_WIFI') {
+           if (!mounted) return;
+           setState(() => _state = 'idle');
+        }
+      } catch(e) {}
+    });
+
+    DeviceTransport().sendCommand("SCAN_WIFI");
+    
+    Future.delayed(const Duration(seconds: 15), () {
+      if (!mounted) return;
+      if (_state == 'scanning') {
+         setState(() {
+           _state = _networks.isNotEmpty ? 'results' : 'idle';
+         });
+      }
     });
   }
 
@@ -303,7 +350,7 @@ class _WifiSetupBleStep2PageState extends State<WifiSetupBleStep2Page> {
     );
   }
 
-  Widget _buildNetworkItem(MockWifiNetwork network, bool isDark) {
+  Widget _buildNetworkItem(BleWifiNetwork network, bool isDark) {
     final isSelected = _selectedSsid == network.ssid && !_showHiddenEntry;
     final accentColor = isDark
         ? const Color(0xFF00D4AA)
@@ -385,9 +432,7 @@ class _WifiSetupBleStep2PageState extends State<WifiSetupBleStep2Page> {
               ),
             ),
             if (isSelected)
-              Icon(Icons.check_circle, color: accentColor, size: 20)
-            else if (network.isSecured)
-              Icon(Icons.lock, size: 16, color: subtextColor),
+              Icon(Icons.check_circle, color: accentColor, size: 20),
           ],
         ),
       ),
