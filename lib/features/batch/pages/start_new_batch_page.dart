@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../app/mock_data.dart';
 import '../../../widgets/primary_button.dart';
-import '../../../widgets/primary_button.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
-
 
 class StartNewBatchPage extends StatefulWidget {
   const StartNewBatchPage({super.key});
@@ -59,32 +57,69 @@ class _StartNewBatchPageState extends State<StartNewBatchPage> {
   }
 
   void _handleStartBatch() async {
-    //Validate required fields
-    if(_weightController.text.trim().isEmpty ||
-    _traysController.text.trim().isEmpty){
-      ScaffoldMessenger.of(context).showSnackBar( 
+    if (_weightController.text.trim().isEmpty ||
+        _traysController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content:Text('Please fill in all required fields.'),
-          behavior:SnackBarBehaviour.floating,
-          backgroundColor:Colors.red,
+          content: Text('Please fill in all required fields.'),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.red,
         ),
-
       );
       return;
     }
-    setState(()=>_isLoading=true);
-    try{
-      final user=FirebaseAuth.instance.currentUser;
-      if(user==null) throw Exception('No logged in user found');
 
-      final db=FirebaseDatabase.instance;
-      final sessionRef=db.ref('users/${user.uid}/sessions').push();
+    setState(() => _isLoading = true);
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) throw Exception('No logged in user found');
 
-      final crop=MockData.crops[_selectedCropIndex];
+      final db = FirebaseDatabase.instance;
+      final sessionRef = db.ref('users/${user.uid}/sessions').push();
 
-      await SessionRef.set()
+      final crop = MockData.crops[_selectedCropIndex];
+
+      await sessionRef.set({
+        'sessionId': sessionRef.key,
+        'deviceId': 'device-001',
+        'crop': crop.name,
+        'variety': _varietyController.text.trim(),
+        'weight': double.tryParse(_weightController.text.trim()) ?? 0.0,
+        'trays': int.tryParse(_traysController.text.trim()) ?? 0,
+        'moistureTarget': _moistureController.text.trim(),
+        'notes': _notesController.text.trim(),
+        'targetTemp': _targetTemp,
+        'durationEstimate': _durationController.text.trim(),
+        'maxTempCutoff':
+            double.tryParse(_maxTempController.text.trim()) ?? 75.0,
+        'lowBatteryCutoff':
+            double.tryParse(_lowBatteryController.text.trim()) ?? 11.5,
+        'mode': _isAutoMode ? 'auto' : 'manual',
+        'status': 'active',
+        'startTime': ServerValue.timestamp,
+      });
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Batch started successfully'),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Color(0xFF4CAF50),
+        ),
+      );
+      Navigator.of(context).pop();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to start batch: $e'),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
-    )
   }
 
   @override
@@ -197,7 +232,7 @@ class _StartNewBatchPageState extends State<StartNewBatchPage> {
                           height: 72,
                           decoration: BoxDecoration(
                             color: isSelected
-                                ? accentColor.withValues(alpha: 0.15)
+                                ? accentColor.withOpacity(0.15)
                                 : (isDark
                                       ? const Color(0xFF112240)
                                       : const Color(0xFFF5F7FA)),
