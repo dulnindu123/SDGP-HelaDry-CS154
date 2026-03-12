@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../../app/mock_data.dart';
 import '../../../widgets/primary_button.dart';
+import '../../../services/device_transport.dart';
+import '../../../services/session_store.dart';
+import 'package:provider/provider.dart';
 
 class StartNewBatchPage extends StatefulWidget {
   const StartNewBatchPage({super.key});
@@ -56,8 +59,21 @@ class _StartNewBatchPageState extends State<StartNewBatchPage> {
 
   void _handleStartBatch() async {
     setState(() => _isLoading = true);
-    await Future.delayed(const Duration(seconds: 1));
+    
+    final cropName = MockData.crops[_selectedCropIndex].name;
+    final hours = double.tryParse(_durationController.text) ?? 12.0;
+
+    await DeviceTransport().sendCommand('START_SESSION', {
+      'crop': cropName,
+      'target_temp': _targetTemp,
+      'hours': hours,
+    });
+
     if (!mounted) return;
+    
+    final session = context.read<SessionStore>();
+    session.setActiveBatch('BATCH-${DateTime.now().millisecondsSinceEpoch}', cropName);
+    
     setState(() => _isLoading = false);
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
