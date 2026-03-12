@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../../app/mock_data.dart';
 import '../../../widgets/primary_button.dart';
+import '../../../widgets/primary_button.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
+
 
 class StartNewBatchPage extends StatefulWidget {
   const StartNewBatchPage({super.key});
@@ -55,18 +59,32 @@ class _StartNewBatchPageState extends State<StartNewBatchPage> {
   }
 
   void _handleStartBatch() async {
-    setState(() => _isLoading = true);
-    await Future.delayed(const Duration(seconds: 1));
-    if (!mounted) return;
-    setState(() => _isLoading = false);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Batch started successfully!'),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: Color(0xFF4CAF50),
-      ),
-    );
-    Navigator.of(context).pop();
+    //Validate required fields
+    if(_weightController.text.trim().isEmpty ||
+    _traysController.text.trim().isEmpty){
+      ScaffoldMessenger.of(context).showSnackBar( 
+        const SnackBar(
+          content:Text('Please fill in all required fields.'),
+          behavior:SnackBarBehaviour.floating,
+          backgroundColor:Colors.red,
+        ),
+
+      );
+      return;
+    }
+    setState(()=>_isLoading=true);
+    try{
+      final user=FirebaseAuth.instance.currentUser;
+      if(user==null) throw Exception('No logged in user found');
+
+      final db=FirebaseDatabase.instance;
+      final sessionRef=db.ref('users/${user.uid}/sessions').push();
+
+      final crop=MockData.crops[_selectedCropIndex];
+
+      await SessionRef.set()
+    }
+    )
   }
 
   @override
