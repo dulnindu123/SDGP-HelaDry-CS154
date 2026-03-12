@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // Added Firebase Auth
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../../services/session_store.dart';
+import '../../../services/api_service.dart'; // Ensure this path is correct
 import '../../../app/routes.dart';
 import '../../../widgets/app_text_field.dart';
 import '../../../widgets/primary_button.dart';
@@ -52,7 +53,6 @@ class _LoginPageState extends State<LoginPage> {
       Navigator.of(context).pushReplacementNamed(AppRoutes.connectionMode);
       
     } on FirebaseAuthException catch (e) {
-      // 4. Handle Firebase-specific errors
       String message = 'An authentication error occurred.';
       
       if (e.code == 'user-not-found') {
@@ -72,7 +72,6 @@ class _LoginPageState extends State<LoginPage> {
         ),
       );
     } catch (e) {
-      // Generic error (e.g., no internet)
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Connection failed. Please check your network.')),
       );
@@ -268,6 +267,20 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                   ],
+                ),
+
+                const SizedBox(height: 32),
+                const Divider(),
+                const SizedBox(height: 16),
+
+                // 🧪 Debug Connection Button
+                TextButton.icon(
+                  onPressed: () => ApiService().checkServerStatus(),
+                  icon: const Icon(Icons.analytics_outlined),
+                  label: const Text("Debug: Test Flask Connection"),
+                  style: TextButton.styleFrom(
+                    foregroundColor: isDark ? Colors.white70 : Colors.black54,
+                  ),
                 ),
               ],
             ),
