@@ -49,7 +49,7 @@
 #define FW_VERSION "2.1.4"
 
 // ========================= DEVICE =========================
-#define DEVICE_ID "heladry_001"
+// DEVICE_ID is now handled dynamically using bleDeviceName
 #define BOOT_BTN  0
 
 // ========================= PINOUT =========================
@@ -148,6 +148,9 @@ static float pres_hpa  = NAN;
 static float lux_val   = NAN;
 static float battery_v = NAN;
 
+static float temp_offset = 0.0f;
+static float hum_offset  = 0.0f;
+
 // Control state
 static bool    heater_on     = false;
 static uint8_t fan_speed_pct = 0;   // 0–100
@@ -190,6 +193,7 @@ static String             bleDeviceName = "HELADRY-0000";
 
 // WiFi state
 static bool wifiConnected = false;
+static bool requestWifiScan = false;
 
 // LittleFS logging
 static bool littlefs_ok = false;
@@ -198,7 +202,7 @@ static int  logFileIndex = 0;
 // ========================= HELPERS =========================
 static uint32_t nowMs() { return millis(); }
 
-static String buildRootPath()    { return String("/devices/") + DEVICE_ID; }
+static String buildRootPath()    { return String("/devices/") + bleDeviceName; }
 static String buildPathLive()    { return buildRootPath() + "/live"; }
 static String buildPathHistory() { return buildRootPath() + "/history"; }
 static String buildPathCommands(){ return buildRootPath() + "/commands"; }
@@ -315,8 +319,8 @@ static void readAllSensors() {
 
   // BME280
   if (bme_ok) {
-    temp_c   = bme.readTemperature();
-    hum_pct  = bme.readHumidity();
+    temp_c   = bme.readTemperature() + temp_offset;
+    hum_pct  = bme.readHumidity() + hum_offset;
     pres_hpa = bme.readPressure() / 100.0f;
   }
 
@@ -695,6 +699,10 @@ static void pollFirebaseCommands() {
     }
   }}
 
+  // Offsets
+  { float tofs=temp_offset; if (fbGetFloat(cfgBase+"/temp_offset", tofs)) temp_offset = tofs; }
+  { float hofs=hum_offset; if (fbGetFloat(cfgBase+"/humidity_offset", hofs)) hum_offset = hofs; }
+
   // Emergency stop via Firebase
   { bool v=false; if (fbGetBool(cmdBase+"/emergency_stop", v) && v) {
     setHeater(false); setFanSpeed(0);
@@ -762,6 +770,9 @@ class CommandCallbacks : public BLECharacteristicCallbacks {
       } else if (val == "TARE") {
         tareScale();
         sendBleAck("TARE", "done");
+      } else if (val == "SCAN_WIFI") {
+        requestWifiScan = true;
+        sendBleAck("SCAN_WIFI", "started");
       } else {
         sendBleAck(val, "failed");
       }
@@ -803,6 +814,12 @@ class CommandCallbacks : public BLECharacteristicCallbacks {
       if (doc.containsKey("target_temp")) {
         target_temp_c = doc["target_temp"] | 35.0f;
       }
+      if (doc.containsKey("temp_offset")) {
+        temp_offset = doc["temp_offset"] | 0.0f;
+      }
+      if (doc.containsKey("humidity_offset")) {
+        hum_offset = doc["humidity_offset"] | 0.0f;
+      }
       sendBleAck("SET_MANUAL_OUTPUTS", "done");
     }
     else if (cmd == "SET_WIFI_CREDS") {
@@ -827,6 +844,10 @@ class CommandCallbacks : public BLECharacteristicCallbacks {
     else if (cmd == "TARE") {
       tareScale();
       sendBleAck("TARE", "done");
+    }
+    else if (cmd == "SCAN_WIFI") {
+      requestWifiScan = true;
+      sendBleAck("SCAN_WIFI", "started");
     }
     else {
       sendBleAck(cmd, "failed");
@@ -974,6 +995,42 @@ void setup() {
 // ========================= LOOP =========================
 void loop() {
   uint32_t now = nowMs();
+
+  // WiFi scanning requested via BLE
+  if (requestWifiScan) {
+    requestWifiScan = false;
+    Serial.println("[WiFi] Starting scan...");
+    int n = WiFi.scanNetworks();
+    Serial.printf("[WiFi] Scan complete, found %d networks\n", n);
+    
+    JsonDocument res;
+    res["cmd"] = "SCAN_WIFI";
+    if (n == 0) {
+      res["status"] = "none";
+    } else {
+      res["status"] = "done";
+      JsonArray nets = res["networks"].to<JsonArray>();
+      for (int i = 0; i < n && i < 15; ++i) { // max 15 to prevent huge payload
+        JsonObject net = nets.add<JsonObject>();
+        net["ssid"] = WiFi.SSID(i);
+        net["rssi"] = WiFi.RSSI(i);
+      }
+    }
+    String out;
+    serializeJson(res, out);
+    if (pAckChar && bleConnected) {
+      if (out.length() >= 500) {
+        // Truncate if too long for BLE characteristic
+        res["networks"].to<JsonArray>().clear();
+        res["status"] = "truncated";
+        out = "";
+        serializeJson(res, out);
+      }
+      pAckChar->setValue(out.c_str());
+      pAckChar->notify();
+    }
+    WiFi.scanDelete();
+  }
 
   // WiFi maintenance
   wifiMaintain();
