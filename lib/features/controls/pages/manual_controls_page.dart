@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../services/session_store.dart';
+import '../../../services/device_transport.dart';
 import '../../../widgets/app_card.dart';
 import '../../../widgets/primary_button.dart';
 
@@ -28,6 +29,12 @@ class _ManualControlsPageState extends State<ManualControlsPage> {
   void _applyFanSpeed() {
     final session = context.read<SessionStore>();
     session.setFanSpeed(_fanSpeed);
+    
+    int hardwareFanSpeed = (_fanSpeed * 2.55).toInt();
+    DeviceTransport().sendCommand('SET_MANUAL_OUTPUTS', {
+      'fan_speed': hardwareFanSpeed
+    });
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Fan speed set to ${_fanSpeed.toStringAsFixed(0)}%'),
@@ -39,6 +46,15 @@ class _ManualControlsPageState extends State<ManualControlsPage> {
   void _applyTemperature() {
     final session = context.read<SessionStore>();
     session.setTargetTemp(_targetTemp);
+
+    // If there is a target temp command. Our firmware seems to track target_temp.
+    // Firmware has SET_MANUAL_OUTPUTS, maybe we can add a 'target_temp' to the JSON 
+    DeviceTransport().sendCommand('START_SESSION', {
+       'target_temp': _targetTemp,
+       'crop': session.activeCrop,
+       'hours': 10 // default or read from session
+    });
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
@@ -67,6 +83,9 @@ class _ManualControlsPageState extends State<ManualControlsPage> {
               Navigator.of(ctx).pop();
               final session = context.read<SessionStore>();
               session.emergencyStop();
+              
+              DeviceTransport().sendCommand('EMERGENCY_STOP');
+
               setState(() {
                 _fanSpeed = 0;
                 _heaterOn = false;
@@ -298,6 +317,9 @@ class _ManualControlsPageState extends State<ManualControlsPage> {
                           setState(() => _heaterOn = v);
                           final session = context.read<SessionStore>();
                           session.setHeaterOn(v);
+                          DeviceTransport().sendCommand('SET_MANUAL_OUTPUTS', {
+                             'heater_on': v
+                          });
                         },
                       ),
                     ],
