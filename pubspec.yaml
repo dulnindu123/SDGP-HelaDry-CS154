@@ -13,6 +13,10 @@ dependencies:
   provider: ^6.1.2
   shared_preferences: ^2.3.4
   google_fonts: ^6.2.1
+  firebase_core: ^3.8.0
+  firebase_database: ^11.0.2
+  flutter_reactive_ble: ^5.3.1
+  permission_handler: ^11.3.1
 
 dev_dependencies:
   flutter_test:
