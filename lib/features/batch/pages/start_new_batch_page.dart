@@ -18,6 +18,7 @@ class _StartNewBatchPageState extends State<StartNewBatchPage> {
   int _selectedCropIndex = 0;
   bool _isAutoMode = true;
   double _targetTemp = 60.0;
+  bool _isDrying = false; // Tracks if a batch is active
   
   // Controllers
   final TextEditingController _weightController = TextEditingController();
@@ -48,13 +49,57 @@ class _StartNewBatchPageState extends State<StartNewBatchPage> {
     }
   }
 
+  // Logic to handle the STOP command
+  Future<void> _handleStopBatch() async {
+    final session = context.read<SessionStore>();
+    
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      final token = await user?.getIdToken();
+
+      final response = await http.post(
+        Uri.parse('http://10.0.2.2:5000/device/stop'),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: jsonEncode({"device_id": session.deviceId}),
+      );
+
+      if (!mounted) return;
+      Navigator.pop(context); // Close loader
+
+      if (response.statusCode == 200) {
+        setState(() => _isDrying = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Emergency Stop Sent!'), 
+            backgroundColor: Colors.redAccent
+          ),
+        );
+      } else {
+        throw Exception("Failed to stop device");
+      }
+    } catch (e) {
+      if (!mounted) return;
+      if (Navigator.canPop(context)) Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Stop Error: ${e.toString()}')),
+      );
+    }
+  }
+
   /// Communicates with Flask Blueprint: /device/start
   Future<void> _handleStartBatch() async {
     final selectedCrop = MockData.crops[_selectedCropIndex];
-    
-    // 1. PULL THE REAL DEVICE ID FROM SESSION
     final session = context.read<SessionStore>();
-    final registeredDeviceId = session.deviceId; // This was set in PairDevicePage
+    final registeredDeviceId = session.deviceId; 
 
     if (registeredDeviceId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -79,13 +124,11 @@ class _StartNewBatchPageState extends State<StartNewBatchPage> {
     );
 
     try {
-      // 2. Get fresh Firebase ID Token
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) throw Exception("Please log in again.");
       
       String? firebaseToken = await user.getIdToken(true); 
 
-      // 3. POST to Backend
       final url = Uri.parse('http://10.0.2.2:5000/device/start'); 
       
       final response = await http.post(
@@ -98,25 +141,23 @@ class _StartNewBatchPageState extends State<StartNewBatchPage> {
       );
 
       if (!mounted) return;
-      Navigator.pop(context); // Close loading indicator
+      Navigator.pop(context); 
 
       final responseData = jsonDecode(response.body);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
+        setState(() => _isDrying = true);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Success: ${responseData['message']}')),
         );
-        Navigator.pop(context); 
       } else {
-        String errorMsg = responseData['message'] ?? "Server rejected request";
-        throw Exception(errorMsg);
+        throw Exception(responseData['message'] ?? "Server rejected request");
       }
     } catch (e) {
       if (!mounted) return;
       if (Navigator.canPop(context)) Navigator.pop(context); 
-      
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: ${e.toString().replaceFirst("Exception: ", "")}')),
+        SnackBar(content: Text('Error: ${e.toString()}')),
       );
     }
   }
@@ -131,7 +172,7 @@ class _StartNewBatchPageState extends State<StartNewBatchPage> {
     return Scaffold(
       backgroundColor: bgColor,
       appBar: AppBar(
-        title: const Text('Start New Batch', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('New Drying Batch', style: TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
@@ -223,17 +264,43 @@ class _StartNewBatchPageState extends State<StartNewBatchPage> {
             const SizedBox(height: 15),
             _buildField('Duration (Hours)', 'Time', _durationController, isDark, cardColor, enabled: !_isAutoMode, keyboard: TextInputType.number),
             const SizedBox(height: 40),
-            SizedBox(
-              width: double.infinity,
-              height: 55,
-              child: ElevatedButton(
-                onPressed: _handleStartBatch,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: accentColor,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+            
+            // SIDE-BY-SIDE BUTTONS: Always visible
+            Row(
+              children: [
+                // START BUTTON
+                Expanded(
+                  child: SizedBox(
+                    height: 55,
+                    child: ElevatedButton(
+                      onPressed: _isDrying ? null : _handleStartBatch, 
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: accentColor,
+                        disabledBackgroundColor: accentColor.withOpacity(0.3),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                      ),
+                      child: const Text('START', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                    ),
+                  ),
                 ),
-                child: const Text('START DRYING BATCH', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-              ),
+                
+                const SizedBox(width: 12),
+
+                // STOP BUTTON
+                Expanded(
+                  child: SizedBox(
+                    height: 55,
+                    child: ElevatedButton(
+                      onPressed: _handleStopBatch, 
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                      ),
+                      child: const Text('STOP', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
