@@ -1,0 +1,503 @@
+================================================================================
+                    HELADRY MOBILE APPLICATION - FULL DOCUMENTATION
+                    Solar-Powered IoT Hybrid Dehydrator System
+================================================================================
+
+App Name:       HelaDry
+Framework:      Flutter (Dart)
+Platform:       Android, iOS, Web
+State Mgmt:     Provider (ChangeNotifier)
+Current Ver:    v1.0.0
+Firmware Ver:   v2.1.4
+
+
+================================================================================
+1. APPLICATION OVERVIEW
+================================================================================
+
+HelaDry is a mobile companion app for a solar-powered food dehydrator machine.
+It allows farmers and users in Sri Lanka to:
+
+  - Monitor their dehydrator machine in real-time (temperature, humidity, etc.)
+  - Control the machine (fan speed, heater, emergency stop)
+  - Track drying batches from start to finish
+  - Access a crop-specific drying guide with preparation steps
+  - View historical drying records
+  - Connect to the machine via WiFi (Online) or Bluetooth BLE (Offline)
+
+The app supports both LIGHT and DARK mode themes.
+
+
+================================================================================
+2. COMPLETE USER FLOW (Step by Step)
+================================================================================
+
+  ┌─────────────┐
+  │  SPLASH     │  App launches → animated logo → 2.2s delay
+  │  SCREEN     │  Checks if user is logged in
+  └──────┬──────┘
+         │
+    ┌────▼────┐     ┌──────────────┐
+    │ LOGGED  │ NO  │  LOGIN PAGE  │  Email/Phone + Password
+    │  IN?    ├────►│              │  Form validation
+    └────┬────┘     │  OR          │
+         │YES      │  CREATE      │  Name + Email + Password + Confirm
+         │         │  ACCOUNT     │  Password matching validation
+         │         └──────┬───────┘
+         │                │ (on success)
+    ┌────▼────────────────▼──────┐
+    │    CONNECTION MODE PAGE    │
+    │                            │
+    │  Choose one:               │
+    │  ┌────────────────────┐    │
+    │  │ ONLINE MODE        │    │  WiFi + Internet
+    │  │ - Cloud Sync       │    │  Remote monitoring
+    │  │ - WiFi Control     │    │  Real-time updates
+    │  │ - Real-time Updates│    │
+    │  └────────────────────┘    │
+    │  ┌────────────────────┐    │
+    │  │ OFFLINE MODE       │    │  Bluetooth only
+    │  │ - BLE Control      │    │  No internet needed
+    │  │ - No WiFi Needed   │    │  Local storage
+    │  │ - Local Storage    │    │  ~10m range
+    │  └────────────────────┘    │
+    └────────────┬───────────────┘
+                 │
+    ┌────────────▼───────────────┐
+    │     PAIR DEVICE PAGE      │
+    │                            │
+    │  Scans for BLE devices     │
+    │  Shows: device name, RSSI, │
+    │  signal quality            │
+    │  Simulated scan: 2s delay  │
+    │  Connect: 1.5s delay       │
+    │                            │
+    │  Mock Devices:             │
+    │  - HELADRY-A1B2 (Excellent)│
+    │  - HelaDry-C3D4 (Fair)     │
+    │  - HELADRY-E5F6 (Weak)    │
+    │  - HELADRY-TEST (Good)    │
+    └────────────┬───────────────┘
+                 │
+    ┌────────────▼───────────────┐
+    │     PAIR SUCCESS PAGE     │
+    │  Shows paired device info  │
+    │  "Successfully Connected!" │
+    └────────────┬───────────────┘
+                 │
+         ┌───────┴───────┐
+         │               │
+    (ONLINE)         (OFFLINE)
+         │               │
+    ┌────▼────┐     ┌────▼────┐
+    │ WiFi    │     │ GO TO   │
+    │ SETUP   │     │DASHBOARD│
+    │ 3 Steps │     │         │
+    └────┬────┘     └─────────┘
+         │
+         ▼
+    ┌────────────────────────────┐
+    │ STEP 1: SELECT WI-FI      │
+    │ Scans nearby networks     │
+    │ Shows: SSID, quality,     │
+    │ lock icon for secured     │
+    │                            │
+    │ Mock Networks:             │
+    │ - Home WiFi (Excellent)   │
+    │ - Office Network (Good)   │
+    │ - Guest Network (Fair)    │
+    │ - FarmNet-5G (Weak)       │
+    └────────────┬───────────────┘
+                 │
+    ┌────────────▼───────────────┐
+    │ STEP 2: ENTER PASSWORD    │
+    │ Shows selected SSID       │
+    │ Password field with toggle │
+    │ "Save Network" option     │
+    │ Simulated connect: 2.5s   │
+    └────────────┬───────────────┘
+                 │
+    ┌────────────▼───────────────┐
+    │ STEP 3: CONFIRMATION      │
+    │ "WiFi Configured!"        │
+    │ Shows network name        │
+    │ Shows signal strength     │
+    │ Shows saved networks list │
+    │ → GO TO DASHBOARD         │
+    └────────────┬───────────────┘
+                 │
+    ┌────────────▼───────────────┐
+    │        DASHBOARD          │
+    │  (Main App Screen)        │
+    │                            │
+    │  See Section 3 below      │
+    └────────────────────────────┘
+
+
+================================================================================
+3. DASHBOARD PAGE (Main Screen)
+================================================================================
+
+The dashboard is the central hub of the app. It contains:
+
+A. HEADER SECTION (Green Gradient)
+   - Welcome message: "Welcome, {userName}!"
+   - Subtitle: "☀ Solar Dehydrator Dashboard"
+   - Calendar icon button
+   - Settings icon button → navigates to Settings
+   - Device status bar: shows paired device ID and last sync date
+   - Connection indicator: green dot with "Online" or "Offline"
+
+B. ACTIVE DRYING BATCH CARD
+   - Shows current active batch if any
+   - If no batch: "No active drying batch" with empty state
+   - "Start New Batch" button → navigates to Start New Batch page
+
+C. LIVE METRICS (2x3 Grid of Cards)
+   - Temperature: 28°C        (red icon)
+   - Humidity: 65%             (blue icon)
+   - Fan Speed: 0%             (green icon)
+   - Heater: OFF               (orange icon)
+   - Battery: 12.6V            (green icon)
+   - Solar: Charging           (yellow icon)
+
+D. QUICK ACTIONS (2x2 Grid)
+   - Start New Batch   → Start New Batch page
+   - Drying Guide      → Crop Guide page
+   - My Records        → My Records page
+   - Device Controls   → Manual Controls page
+
+
+================================================================================
+4. FEATURE PAGES (Detailed)
+================================================================================
+
+---------- 4.1 Manual Controls Page ----------
+
+Allows direct control of the dehydrator machine:
+
+  a) FAN SPEED CONTROL
+     - Slider: 0% to 100%
+     - Current value displayed
+     - "Apply" button sends command
+     - Success snackbar: "Fan speed set to X%"
+
+  b) TARGET TEMPERATURE CONTROL
+     - Slider: 30°C to 80°C
+     - "Apply" button sends command
+     - Success snackbar: "Target temp set to X°C"
+
+  c) HEATER TOGGLE
+     - Switch: ON / OFF
+     - Immediate effect
+
+  d) EMERGENCY STOP BUTTON
+     - Red button at the bottom
+     - Shows confirmation dialog
+     - Sets fan to 0%, heater OFF
+     - Critical safety feature
+
+
+---------- 4.2 Start New Batch Page ----------
+
+Create a new drying session:
+
+  - Crop selector: Choose from 7 supported crops
+  - Tray count: 1-10 trays
+  - Weight input: Enter weight in kg
+  - Auto-fills recommended temperature from crop guide
+  - Starts the drying batch and tracks it
+
+
+---------- 4.3 Crop Guide Page ----------
+
+Comprehensive drying guide for 7 crops:
+
+  ┌──────────────┬───────┬──────────┬────────────┬──────────────────────────────┐
+  │ Crop         │ Temp  │ Duration │ Thickness  │ Pretreatment                 │
+  ├──────────────┼───────┼──────────┼────────────┼──────────────────────────────┤
+  │ 🥭 Mango     │ 60°C  │ 12-24h   │ 5mm        │ Dip in lemon juice 5 min     │
+  │ 🍈 Jackfruit  │ 55°C  │ 18-30h   │ 8mm        │ No pretreatment needed       │
+  │ 🍅 Tomato     │ 55°C  │ 8-14h    │ 6mm        │ Light salt sprinkle          │
+  │ 🍌 Banana     │ 58°C  │ 10-18h   │ 5mm        │ Dip in lemon water           │
+  │ 🫒 Papaya     │ 55°C  │ 10-16h   │ 6mm        │ No pretreatment needed       │
+  │ 🌶️ Chili      │ 50°C  │ 8-12h    │ Whole/half │ Slit lengthwise              │
+  │ 🍇 Grape      │ 55°C  │ 24-48h   │ Whole      │ Boiling water dip 30s        │
+  └──────────────┴───────┴──────────┴────────────┴──────────────────────────────┘
+
+Each crop entry includes:
+  - Name and emoji icon
+  - Recommended temperature and duration
+  - Slice thickness
+  - Pretreatment instructions
+  - Fan mode (Auto for all)
+  - Tray load instructions
+  - Step-by-step preparation guide (4 steps)
+  - Drying tips (4 tips)
+
+
+---------- 4.4 My Records Page ----------
+
+History of all drying batches:
+
+  - Filter by: Active / Completed / All
+  - Each record shows:
+    - Batch ID (e.g., BATCH-001)
+    - Crop name and emoji
+    - Status badge (Active = green, Completed = teal)
+    - Weight in kg
+    - Start date (and end date if completed)
+    - Number of trays
+    - Target temperature
+
+  Mock Records:
+  - BATCH-001: Mango (Active), 5.0 kg, 4 trays, 60°C
+  - BATCH-002: Tomato (Completed), 3.5 kg, 3 trays, 55°C
+  - BATCH-003: Banana (Completed), 4.2 kg, 5 trays, 58°C
+
+
+---------- 4.5 Settings Page ----------
+
+Comprehensive settings organized into sections:
+
+  a) DEVICE INFO
+     - Device Name: HelaDry
+     - Device ID: (from pairing)
+     - Firmware: v2.1.4
+     - "Restart Device" button
+     - "Unpair Device" button
+
+  b) SENSOR CALIBRATION
+     - Temperature offset input (°C)
+     - Humidity offset input (%)
+
+  c) ALERTS & NOTIFICATIONS
+     - Over Temperature Alert (toggle)
+     - Low Battery Alert (toggle)
+     - Sensor Fault Alert (toggle)
+
+  d) TEMPERATURE UNITS
+     - Toggle: Celsius / Fahrenheit
+
+  e) THEME
+     - Toggle: Light Mode / Dark Mode (uses ThemeController)
+
+  f) ABOUT
+     - Firmware Version: v2.1.4
+     - App Version: v1.0.0
+
+  g) ACCOUNT
+     - Edit Profile button → Edit Profile page
+     - Logout button → returns to Login page
+
+
+---------- 4.6 Edit Profile Page ----------
+
+  - Pre-filled fields: Name and Email
+  - Edit and save user profile details
+  - Updates SessionStore
+
+
+================================================================================
+5. STATE MANAGEMENT (SessionStore)
+================================================================================
+
+The app uses Provider + ChangeNotifier for state management.
+SessionStore holds ALL app state in memory (no persistent storage):
+
+  AUTH STATE:
+    - isLoggedIn (bool)
+    - userName (String)
+    - userEmail (String)
+
+  CONNECTION STATE:
+    - connectionMode ('online' or 'offline')
+    - pairedDeviceId (String)
+    - pairedDeviceName (String)
+    - selectedWifiSsid (String)
+    - wifiConfigured (bool)
+    - savedNetworks (List)
+
+  DEVICE CONTROL STATE:
+    - fanSpeed (0-100%)
+    - heaterOn (bool)
+    - targetTemp (30-80°C)
+
+  SETTINGS STATE:
+    - useCelsius (bool)
+    - tempOffset (double)
+    - humidityOffset (double)
+    - overTempAlert (bool)
+    - lowBatteryAlert (bool)
+    - sensorFaultAlert (bool)
+
+  KEY METHODS:
+    - login(name, email)    → sets logged in, stores user info
+    - logout()              → resets ALL state to defaults
+    - setConnectionMode()   → online or offline
+    - setPairedDevice()     → store device ID and name
+    - setFanSpeed()         → 0-100%
+    - setHeaterOn()         → bool
+    - setTargetTemp()       → 30-80°C
+    - emergencyStop()       → fan=0, heater=OFF
+
+
+================================================================================
+6. THEME SYSTEM
+================================================================================
+
+The app supports Light and Dark themes via ThemeController.
+
+  ThemeController:
+    - Extends ChangeNotifier
+    - Stores ThemeMode (light/dark/system)
+    - toggleTheme() switches between light and dark
+
+  AppTheme (app_theme.dart - 499 lines):
+    - Defines AppTheme.lightTheme and AppTheme.darkTheme
+    - Custom color schemes for both modes
+    - Dark mode uses deep blues/teals (#0A1628, #112240, #00D4AA)
+    - Light mode uses clean whites with blue accents (#1976D2)
+    - Custom text themes, card themes, input themes, button themes
+    - Font: Plus Jakarta Sans (Google Font)
+
+  ModeToggleButton widget:
+    - Sun/Moon icon toggle
+    - Available on login, signup, and connection mode pages
+
+
+================================================================================
+7. REUSABLE WIDGET COMPONENTS
+================================================================================
+
+  ┌──────────────────────┬─────────────────────────────────────────────────────┐
+  │ Widget               │ Purpose                                            │
+  ├──────────────────────┼─────────────────────────────────────────────────────┤
+  │ PrimaryButton        │ Main CTA button with gradient, loading spinner,    │
+  │                      │ haptic feedback, press animation                   │
+  ├──────────────────────┼─────────────────────────────────────────────────────┤
+  │ SecondaryButton      │ Outlined/ghost button for secondary actions,       │
+  │                      │ with loading state and press animation             │
+  ├──────────────────────┼─────────────────────────────────────────────────────┤
+  │ AppCard              │ Container card with border, selection state,       │
+  │                      │ light/dark adaptive styling                        │
+  ├──────────────────────┼─────────────────────────────────────────────────────┤
+  │ AppTextField         │ Labeled text input with validation, obscure        │
+  │                      │ toggle for passwords, custom hint text             │
+  ├──────────────────────┼─────────────────────────────────────────────────────┤
+  │ EmptyState           │ Placeholder widget for empty lists/screens         │
+  │                      │ Icon + title + subtitle + optional action button   │
+  ├──────────────────────┼─────────────────────────────────────────────────────┤
+  │ ModeToggleButton     │ Light/dark theme switch (sun/moon icon)            │
+  ├──────────────────────┼─────────────────────────────────────────────────────┤
+  │ StepperHeader        │ Multi-step progress indicator for WiFi setup       │
+  │                      │ Shows step numbers, labels, connecting lines       │
+  └──────────────────────┴─────────────────────────────────────────────────────┘
+
+
+================================================================================
+8. SERVICES
+================================================================================
+
+  a) SessionStore (session_store.dart)
+     → Described in Section 5 above
+
+  b) MockDeviceService (mock_device_service.dart)
+     → Simulates BLE device scanning
+     → Returns mock device list with artificial delay
+
+  c) MockWifiService (mock_wifi_service.dart)
+     → Simulates WiFi network scanning
+     → Returns mock network list with artificial delay
+
+
+================================================================================
+9. PROJECT STRUCTURE
+================================================================================
+
+  lib/
+  ├── main.dart                              → App entry point
+  ├── app/
+  │   ├── app.dart                           → HelaDryApp root widget + routes
+  │   ├── routes.dart                        → 16 named route constants
+  │   └── mock_data.dart                     → Mock data models and datasets
+  ├── features/
+  │   ├── auth/pages/
+  │   │   ├── splash_page.dart               → Animated splash screen
+  │   │   ├── login_page.dart                → Email/password login
+  │   │   └── create_account_page.dart       → Registration form
+  │   ├── connection/pages/
+  │   │   └── connection_mode_page.dart      → Online/Offline mode picker
+  │   ├── pair/pages/
+  │   │   ├── pair_device_page.dart          → BLE device scanner + connect
+  │   │   └── pair_success_page.dart         → Pairing confirmation
+  │   ├── wifi/pages/
+  │   │   ├── wifi_setup_ble_step1_page.dart → Select WiFi network
+  │   │   ├── wifi_setup_ble_step2_page.dart → Enter WiFi password
+  │   │   └── wifi_setup_ble_step3_page.dart → WiFi config confirmation
+  │   ├── dashboard/pages/
+  │   │   └── dashboard_page.dart            → Main dashboard with metrics
+  │   ├── controls/pages/
+  │   │   └── manual_controls_page.dart      → Fan, heater, temp controls
+  │   ├── batch/pages/
+  │   │   └── start_new_batch_page.dart      → Create new drying session
+  │   ├── guide/pages/
+  │   │   └── crop_guide_page.dart           → Crop-specific drying guide
+  │   ├── records/pages/
+  │   │   └── my_records_page.dart           → Batch history with filters
+  │   └── settings/pages/
+  │       ├── settings_page.dart             → Full app settings
+  │       └── edit_profile_page.dart         → Edit user profile
+  ├── services/
+  │   ├── session_store.dart                 → App-wide state management
+  │   ├── mock_device_service.dart           → Simulated BLE scanning
+  │   └── mock_wifi_service.dart             → Simulated WiFi scanning
+  ├── theme/
+  │   ├── app_theme.dart                     → Light + Dark theme definitions
+  │   └── theme_controller.dart              → Theme mode switching
+  └── widgets/
+      ├── primary_button.dart                → Primary CTA button
+      ├── secondary_button.dart              → Secondary action button
+      ├── app_card.dart                      → Reusable card container
+      ├── app_text_field.dart                → Labeled text input field
+      ├── empty_state.dart                   → Empty/placeholder widget
+      ├── mode_toggle_button.dart            → Light/dark mode toggle
+      └── stepper_header.dart                → Multi-step progress bar
+
+
+================================================================================
+10. IoT HARDWARE FIRMWARE (ESP32)
+================================================================================
+
+  Location:   SDGP-HelaDry-CS154/src/main.cpp
+  Board:      ESP32 DOIT DevKit V1
+  Framework:  Arduino (PlatformIO)
+  Libraries:  HX711 (load cell), Firebase ESP32 Client
+
+  Current Firmware Functions:
+    1. Connects to WiFi using hardcoded SSID/password
+    2. Initializes HX711 load cell sensor on pins 18, 19
+    3. Calibrates scale with factor -7050.0
+    4. Connects to Firebase Realtime Database
+    5. Reads weight every 3 seconds
+    6. Pushes weight to Firebase path: /HelaDry/current_weight
+
+  Firebase URL: heladry-iot-24a53-default-rtdb.asia-southeast1.firebasedatabase.app
+
+
+================================================================================
+11. IMPORTANT NOTES
+================================================================================
+
+  - The app currently uses MOCK DATA — no real backend/API integration
+  - All state is in-memory only (resets on app restart)
+  - No persistent storage (SharedPreferences/Hive not implemented)
+  - No real BLE/WiFi scanning — uses simulated services with delays
+  - Firebase integration exists only in the ESP32 firmware, not in the app
+  - The app is designed for demonstration/academic purposes (SDGP project)
+  - Authentication is simulated (no real auth server)
+  - Page transitions use custom fade+slide animations (250ms)
+
+================================================================================
+                            END OF DOCUMENTATION
+================================================================================

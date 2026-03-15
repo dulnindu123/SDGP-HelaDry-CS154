@@ -1,28 +1,22 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:heladry/dashboard_screen.dart';
+import 'package:provider/provider.dart';
+import 'package:flutter_application_1/app/app.dart';
+import 'package:flutter_application_1/theme/theme_controller.dart';
+import 'package:flutter_application_1/services/session_store.dart';
 
 void main() {
-  testWidgets('Dashboard screen displays welcome message', (WidgetTester tester) async {
-    // Build the dashboard screen directly for testing
+  testWidgets('HelaDry app loads splash screen', (WidgetTester tester) async {
     await tester.pumpWidget(
-      const MaterialApp(
-        home: DashboardScreen(),
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => ThemeController()),
+          ChangeNotifierProvider(create: (_) => SessionStore()),
+        ],
+        child: const HelaDryApp(),
       ),
     );
 
-    // Verify welcome text is displayed
-    expect(find.text('Welcome,'), findsOneWidget);
-    expect(find.text('Farmer!'), findsOneWidget);
-    expect(find.text('Solar Dehydrator Dashboard'), findsOneWidget);
-    expect(find.byIcon(Icons.wb_sunny), findsOneWidget);
+    // The splash screen should show the app name
+    expect(find.text('HelaDry'), findsOneWidget);
   });
 }

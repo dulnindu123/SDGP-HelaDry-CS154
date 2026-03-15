@@ -1,23 +1,27 @@
 import 'package:flutter/material.dart';
-import 'splash_screen.dart';
+import 'package:provider/provider.dart';
+import 'theme/theme_controller.dart';
+import 'services/session_store.dart';
+import 'app/app.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
-void main() {
-  runApp(const SolarDryingApp());
-}
+void main() async {
+  // 1. Ensure Flutter is initialized
+  WidgetsFlutterBinding.ensureInitialized();
 
-class SolarDryingApp extends StatelessWidget {
-  const SolarDryingApp({super.key});
+  // 2. Initialize Firebase with the generated options
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
 
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Smart Solar Drying',
-      theme: ThemeData(
-        useMaterial3: true,
-        colorSchemeSeed: const Color(0xFF13B546),
-      ),
-      home: const SplashScreen(),
-    );
-  }
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ThemeController()),
+        ChangeNotifierProvider(create: (_) => SessionStore()),
+      ],
+      child: const HelaDryApp(),
+    ),
+  );
 }
