@@ -111,6 +111,7 @@ class DashboardScreen extends StatelessWidget {
                       subtitle: "Crop preparation & schedules"
                   ),
                 ),
+                const SizedBox(height: 12),
                 // 3. My Records Link (Future Page)
                 GestureDetector(
                   onTap: () => _showPlaceholder(context, "My Records", const Color(0xFFAA33FF)),
