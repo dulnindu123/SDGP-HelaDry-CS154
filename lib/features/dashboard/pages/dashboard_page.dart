@@ -275,6 +275,34 @@ class _DashboardPageState extends State<DashboardPage> {
                           ),
                           const SizedBox(height: 16),
                           SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                Navigator.of(
+                                  context,
+                                ).pushNamed(AppRoutes.cropGuide);
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: isDark
+                                    ? const Color(0xFF1A3A0A)
+                                    : const Color(0xFF5B8C2E),
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 24,
+                                  vertical: 12,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              child: const Text(
+                                'Drying Guide',
+                                style: TextStyle(fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          SizedBox(
                             child: ElevatedButton(
                               onPressed: () {
                                 Navigator.of(
@@ -563,7 +591,7 @@ class _DashboardPageState extends State<DashboardPage> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: color.withOpacity(isDark ? 0.15 : 0.1),
           borderRadius: BorderRadius.circular(16),
@@ -572,31 +600,31 @@ class _DashboardPageState extends State<DashboardPage> {
         child: Column(
           children: [
             Container(
-              width: 44,
-              height: 44,
+              width: 56,
+              height: 56,
               decoration: BoxDecoration(
                 color: color.withOpacity(isDark ? 0.3 : 0.15),
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, color: color, size: 22),
+              child: Icon(icon, color: color, size: 28),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             Text(
               label,
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                fontSize: 14,
                 color: isDark
                     ? const Color(0xFFE6F1FF)
                     : const Color(0xFF1A2D4D),
               ),
             ),
-            const SizedBox(height: 2),
+            const SizedBox(height: 4),
             Text(
               subtitle,
               style: TextStyle(
-                fontSize: 11,
+                fontSize: 12,
                 color: isDark
                     ? const Color(0xFF8892B0)
                     : const Color(0xFF64748B),
@@ -751,7 +779,7 @@ class _ActiveBatchTimerCardState extends State<_ActiveBatchTimerCard> {
             ),
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
         Row(
           children: [
             Expanded(
