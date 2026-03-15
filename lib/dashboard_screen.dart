@@ -1,5 +1,6 @@
 import 'drying_guide_screen.dart';
 import 'package:flutter/material.dart';
+import 'build_dehydrator_screen.dart';
 import 'my_records_screen.dart';
 import 'start_batch_screen.dart';
 import 'drying_report_screen.dart';
@@ -120,9 +121,9 @@ class DashboardScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
 
-                // 4. Build Dehydrator Link (Future Page)
+                // 4. Build Dehydrator Link
                 GestureDetector(
-                  onTap: () => _showPlaceholder(context, "Build Dehydrator", const Color(0xFFFF6D00)),
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const BuildDehydratorScreen())),
                   child: const DashboardCard(color: Color(0xFFFF6D00), icon: Icons.build, title: "Build Dehydrator", subtitle: "Construction instructions"),
                 ),
               ],
