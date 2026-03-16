@@ -1,0 +1,24 @@
+---
+import Layout from '../layouts/Layout.astro';
+import HeroScrollScrub from '../components/HeroScrollScrub';
+import TeamGrid from '../components/TeamGrid';
+
+// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
+// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+---
+
+<Layout title="HelaDry - Smart Solar Dehydrator">
+	<main class="w-full relative">
+		<HeroScrollScrub client:only="react" />
+	    
+        <div class="relative w-full min-h-screen bg-transparent">
+            {/* The rest of the content will go here, currently using space */}
+            <div class="h-[20vh]"></div>
+            
+            <TeamGrid client:visible />
+
+            {/* Extra space for scrolling to test pinned effects */}
+            <div class="h-[50vh]"></div>
+        </div>
+	</main>
+</Layout>

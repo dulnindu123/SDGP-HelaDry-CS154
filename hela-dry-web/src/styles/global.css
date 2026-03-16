@@ -1,0 +1,27 @@
+@import "tailwindcss";
+
+@theme {
+  --color-forest-green: #115D33;
+  --color-forest-light: #1A8646;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-heading: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  html, body {
+    @apply bg-white text-gray-900 font-sans antialiased;
+    scroll-behavior: smooth;
+    margin: 0;
+    width: 100%;
+    min-height: 100%;
+    overflow-x: hidden;
+  }
+
+  ::selection {
+    @apply bg-forest-green text-white;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading tracking-tight font-bold;
+  }
+}
