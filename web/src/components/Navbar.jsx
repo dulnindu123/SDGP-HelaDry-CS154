@@ -1,25 +1,7 @@
-function Navbar() {
-  return (
-    <nav className="sticky top-0 z-50 bg-white shadow-md">
-
-      <div className="max-w-6xl mx-auto flex justify-between items-center p-4">
-
-        <div className="flex items-center gap-2">
-          <img src="/logo.png" className="w-10"/>
-          <h1 className="text-xl font-bold text-green-700">HelaDry</h1>
-        </div>
-
-        <ul className="flex gap-8 text-gray-700 font-medium">
-          <li className="hover:text-green-700 cursor-pointer">Home</li>
-          <li className="hover:text-green-700 cursor-pointer">Features</li>
-          <li className="hover:text-green-700 cursor-pointer">Dashboard</li>
-          <li className="hover:text-green-700 cursor-pointer">Team</li>
-        </ul>
-
-      </div>
-
-    </nav>
-  )
-}
-
-export default Navbar
+<nav class="nav" id="nav">
+<a href="#home" class="nav-logo"><div class="nav-icon">☀️</div><span class="nav-name">Hela<span>Dry</span></span></a>
+<ul class="nav-links" id="nav-links">
+<li><a href="#problem">Problem</a></li><li><a href="#solution">Solution</a></li><li><a href="#hood">Tech</a></li><li><a href="#hiw">How It Works</a></li><li><a href="#impact">Impact</a></li><li><a href="#team">Team</a></li><li><a href="#cta">Contact</a></li>
+</ul>
+<div class="hamburger" id="hamburger"><span></span><span></span><span></span></div>
+</nav>
