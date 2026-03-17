@@ -329,37 +329,43 @@ if (window.gsap) {
 
   const solarBg = document.getElementById('solar-zoom-bg');
   if (solarBg) {
-    const totalFrames = 121; // adjust to your real frame count
+    const totalFrames = 121; // set to your real frame count
     const framePaths = Array.from({ length: totalFrames }, (_, i) => {
       const frameNumber = String(i + 1).padStart(3, '0');
-      // Frames live in web/SolarPanelZoomPNG
+      // Frames live at /SolarPanelZoomPNG/... next to index.html
       return `SolarPanelZoomPNG/ezgif-frame-${frameNumber}.png`;
     });
 
-    // Preload frames for smoother animation
+    // Preload frames (optional but smoother)
     framePaths.forEach(src => {
       const img = new Image();
       img.src = src;
     });
 
     const state = { frame: 0 };
+
     const renderFrame = () => {
-      const index = Math.max(0, Math.min(totalFrames - 1, Math.round(state.frame)));
+      const index = Math.max(
+        0,
+        Math.min(totalFrames - 1, Math.round(state.frame))
+      );
       solarBg.style.backgroundImage = `url('${framePaths[index]}')`;
     };
 
-    renderFrame(); // initial
+    renderFrame(); // initial frame
 
     gsap.to(state, {
       frame: totalFrames - 1,
       ease: 'none',
+      snap: { frame: 1 },          // snap to integer frames, avoids jitter
       scrollTrigger: {
-        trigger: '#hero',       // start animation at hero
+        trigger: '#hero',          // animation tied to hero section
         start: 'top top',
-        end: 'bottom top',      // finishes as user scrolls past hero
-        scrub: true,            // tie to scroll
+        end: 'bottom top',
+        scrub: true,
+        // markers: true,          // uncomment for debugging
       },
       onUpdate: renderFrame,
     });
   }
-}    
+}
