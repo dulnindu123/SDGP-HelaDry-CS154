@@ -199,14 +199,6 @@
       onConfigChange(defaultConfig);
     }
 
-    // Splash screen animation
-    window.addEventListener('load', () => {
-      setTimeout(() => {
-        document.getElementById('splash-screen').classList.add('fade-out');
-        document.querySelector('.app-wrapper').classList.add('visible');
-      }, 4000);
-    });
-
     // Hamburger menu toggle
     const hamburger = document.getElementById('hamburger');
     const navMenu = document.getElementById('nav-menu');
@@ -300,72 +292,86 @@
       });
     });
 
-    // Solar Zoom Scroll Feature
-    const solarZoomBg = document.getElementById('solar-zoom-bg');
-    const totalFrames = 121;
-    let currentFrame = 1;
-
-    const updateZoomImage = () => {
-      const scrollTop = window.pageYOffset;
-      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-      const scrollPercent = scrollTop / docHeight;
-      const frame = Math.min(totalFrames, Math.max(1, Math.floor(scrollPercent * totalFrames) + 1));
-      if (frame !== currentFrame) {
-        currentFrame = frame;
-        const frameNumber = frame.toString().padStart(3, '0');
-        solarZoomBg.style.backgroundImage = `url('/SolarPanelZoomPNG/ezgif-frame-${frameNumber}.png')`;
-      }
-    };
-
-    window.addEventListener('scroll', updateZoomImage);
-    updateZoomImage(); // Set initial image
-
     (function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a754526e1fc513a',t:'MTc2NDYyMDI2OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();
+    // Combined splash + solar zoom intro using GSAP
+    window.addEventListener('load', () => {
+      const splash = document.getElementById('splash-screen');
+      const appWrapper = document.querySelector('.app-wrapper');
+      const solarBg = document.getElementById('solar-zoom-bg');
 
+      // Fallback: if GSAP is missing, just fade splash and show app after 3.5s
+      if (!window.gsap || !solarBg || !appWrapper || !splash) {
+        setTimeout(() => {
+          splash.classList.add('fade-out');
+          appWrapper.classList.add('visible');
+        }, 3500);
+        return;
+      }
 
-// GSAP scroll-driven solar panel zoom
-if (window.gsap) {
-  gsap.registerPlugin(ScrollTrigger);
+      const totalFrames = 121;
+      const framePaths = Array.from({ length: totalFrames }, (_, i) => {
+        const frameNumber = String(i + 1).padStart(3, '0');
+        return `SolarPanelZoomPNG/ezgif-frame-${frameNumber}.png`;
+      });
 
-  const solarBg = document.getElementById('solar-zoom-bg');
-  if (solarBg) {
-    const totalFrames = 121; // set to your real frame count
-    const framePaths = Array.from({ length: totalFrames }, (_, i) => {
-      const frameNumber = String(i + 1).padStart(3, '0');
-      // Frames live at /SolarPanelZoomPNG/... next to index.html
-      return `SolarPanelZoomPNG/ezgif-frame-${frameNumber}.png`;
-    });
+      // Preload frames for smooth playback
+      framePaths.forEach(src => {
+        const img = new Image();
+        img.src = src;
+      });
 
-    // Preload frames (optional but smoother)
-    framePaths.forEach(src => {
-      const img = new Image();
-      img.src = src;
-    });
+      const state = { frame: 0 };
 
-    const state = { frame: 0 };
+      const renderFrame = () => {
+        const index = Math.max(
+          0,
+          Math.min(totalFrames - 1, Math.round(state.frame))
+        );
+        solarBg.style.backgroundImage = `url('${framePaths[index]}')`;
+      };
 
-    const renderFrame = () => {
-      const index = Math.max(
-        0,
-        Math.min(totalFrames - 1, Math.round(state.frame))
+      renderFrame(); // initial static frame behind the splash
+
+      // Timeline: 1) hold logo, 2) play zoom, 3) fade out splash + reveal app
+      const tl = gsap.timeline();
+
+      // Hold the logo splash for a moment
+      tl.to({}, { duration: 1.6 }); // just a delay
+
+      // Play the solar panel zoom while transitioning into the site
+      tl.to(
+        state,
+        {
+          frame: totalFrames - 1,
+          duration: 2.2,
+          ease: 'none',
+          onUpdate: renderFrame,
+        },
+        '<' // start at same time as next tweens
       );
-      solarBg.style.backgroundImage = `url('${framePaths[index]}')`;
-    };
 
-    renderFrame(); // initial frame
+      // Fade out the splash
+      tl.to(
+        splash,
+        {
+          opacity: 0,
+          scale: 1.05,
+          pointerEvents: 'none',
+          duration: 1.2,
+        },
+        '<0.4' // start slightly after zoom begins
+      );
 
-    gsap.to(state, {
-      frame: totalFrames - 1,
-      ease: 'none',
-      snap: { frame: 1 },          // snap to integer frames, avoids jitter
-      scrollTrigger: {
-        trigger: '#hero',          // animation tied to hero section
-        start: 'top top',
-        end: 'bottom top',
-        scrub: true,
-        // markers: true,          // uncomment for debugging
-      },
-      onUpdate: renderFrame,
+      // Fade in the main app
+      tl.to(
+        appWrapper,
+        {
+          opacity: 1,
+          duration: 1.2,
+          onStart: () => {
+            appWrapper.classList.add('visible');
+          },
+        },
+        '<' // overlap with splash fade
+      );
     });
-  }
-}
