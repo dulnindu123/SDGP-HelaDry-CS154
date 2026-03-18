@@ -64,6 +64,11 @@ class _DashboardPageState extends State<DashboardPage> {
     final subtextColor = isDark
         ? const Color(0xFF8892B0)
         : const Color(0xFF64748B);
+    final now = DateTime.now();
+    final hour = now.hour == 0 ? 12 : (now.hour > 12 ? now.hour - 12 : now.hour);
+    final minute = now.minute.toString().padLeft(2, '0');
+    final amPm = now.hour >= 12 ? 'PM' : 'AM';
+    final syncDateStr = '${now.month}/${now.day}/${now.year} $hour:$minute $amPm';
 
     return Scaffold(
       body: SingleChildScrollView(
@@ -133,14 +138,6 @@ class _DashboardPageState extends State<DashboardPage> {
                         children: [
                           IconButton(
                             icon: const Icon(
-                              Icons.calendar_today,
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                            onPressed: () {},
-                          ),
-                          IconButton(
-                            icon: const Icon(
                               Icons.settings,
                               color: Colors.white,
                               size: 20,
@@ -195,7 +192,7 @@ class _DashboardPageState extends State<DashboardPage> {
                               ),
                             ),
                             Text(
-                              MockData.lastSyncDate,
+                              syncDateStr,
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 13,

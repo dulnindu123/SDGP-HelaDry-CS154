@@ -6,7 +6,6 @@ import '../../../theme/theme_controller.dart';
 import '../../../app/routes.dart';
 import '../../../app/mock_data.dart';
 import '../../../widgets/app_card.dart';
-import '../../../widgets/primary_button.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -16,24 +15,6 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  final _tempOffsetController = TextEditingController(text: '0.0');
-  final _humidityOffsetController = TextEditingController(text: '0.0');
-
-  @override
-  void initState() {
-    super.initState();
-    final session = context.read<SessionStore>();
-    _tempOffsetController.text = session.tempOffset.toString();
-    _humidityOffsetController.text = session.humidityOffset.toString();
-  }
-
-  @override
-  void dispose() {
-    _tempOffsetController.dispose();
-    _humidityOffsetController.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -253,9 +234,6 @@ class _SettingsPageState extends State<SettingsPage> {
                 _buildDeviceButton(Icons.swap_horiz, 'Change Device', context, onTap: () {
                   Navigator.of(context).pushNamed(AppRoutes.pairDevice);
                 }),
-                _buildDeviceButton(Icons.wifi, 'Manage WiFi Networks', context, onTap: () {
-                  Navigator.of(context).pushNamed(AppRoutes.wifiStep1);
-                }),
                 _buildDeviceButton(Icons.settings, 'Configure WiFi', context, onTap: () {
                   Navigator.of(context).pushNamed(AppRoutes.wifiStep1);
                 }),
@@ -265,48 +243,6 @@ class _SettingsPageState extends State<SettingsPage> {
             const Divider(),
             const SizedBox(height: 16),
 
-            // ── Sensor Calibration ──
-            _sectionTitle('Sensor Calibration', isDark),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Icon(Icons.tune, size: 18, color: accentColor),
-                const SizedBox(width: 8),
-              ],
-            ),
-            const SizedBox(height: 8),
-            _buildCalibrationField(
-              'Temperature Offset (°C)',
-              _tempOffsetController,
-              isDark,
-            ),
-            _buildCalibrationField(
-              'Humidity Offset (%)',
-              _humidityOffsetController,
-              isDark,
-            ),
-            const SizedBox(height: 8),
-            PrimaryButton(
-              label: 'Save Calibration',
-              onPressed: () {
-                final session = context.read<SessionStore>();
-                session.setTempOffset(
-                  double.tryParse(_tempOffsetController.text) ?? 0.0,
-                );
-                session.setHumidityOffset(
-                  double.tryParse(_humidityOffsetController.text) ?? 0.0,
-                );
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Calibration saved!'),
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: 16),
-            const Divider(),
-            const SizedBox(height: 16),
 
             // ── Notifications ──
             _sectionTitle('Notifications', isDark),
@@ -339,29 +275,6 @@ class _SettingsPageState extends State<SettingsPage> {
             const Divider(),
             const SizedBox(height: 16),
 
-            // ── Units ──
-            _sectionTitle('Units', isDark),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('Temperature Unit'),
-                Row(
-                  children: [
-                    _buildUnitButton('°C', session.useCelsius, isDark, () {
-                      session.setUseCelsius(true);
-                    }),
-                    const SizedBox(width: 4),
-                    _buildUnitButton('°F', !session.useCelsius, isDark, () {
-                      session.setUseCelsius(false);
-                    }),
-                  ],
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            const Divider(),
-            const SizedBox(height: 16),
 
             // ── About ──
             _sectionTitle('About', isDark),
@@ -483,39 +396,6 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Widget _buildCalibrationField(
-    String label,
-    TextEditingController controller,
-    bool isDark,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
-          ),
-          const SizedBox(height: 4),
-          SizedBox(
-            height: 44,
-            child: TextField(
-              controller: controller,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 10,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildNotificationRow(
     IconData icon,
     String title,
@@ -556,38 +436,6 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
           Switch(value: value, onChanged: onChanged),
         ],
-      ),
-    );
-  }
-
-  Widget _buildUnitButton(
-    String label,
-    bool isSelected,
-    bool isDark,
-    VoidCallback onTap,
-  ) {
-    final accentColor = isDark
-        ? const Color(0xFF00D4AA)
-        : const Color(0xFF1976D2);
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? accentColor
-              : (isDark ? const Color(0xFF112240) : const Color(0xFFF5F7FA)),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            color: isSelected
-                ? (isDark ? const Color(0xFF0A1628) : Colors.white)
-                : (isDark ? const Color(0xFF8892B0) : const Color(0xFF64748B)),
-          ),
-        ),
       ),
     );
   }
