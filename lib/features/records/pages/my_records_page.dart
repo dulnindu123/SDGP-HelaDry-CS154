@@ -334,7 +334,7 @@ class _MyRecordsPageState extends State<MyRecordsPage> {
       if (raw == null || raw.isEmpty) return '';
       DateTime? parsed;
       try {
-        parsed = DateTime.tryParse(raw);
+        parsed = DateTime.tryParse(raw)?.toLocal();
       } catch (_) {
         parsed = null;
       }
