@@ -250,51 +250,53 @@ class _DashboardPageState extends State<DashboardPage> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    Icon(
-                      Icons.wb_sunny_outlined,
-                      size: 48,
-                      color: subtextColor.withOpacity(0.5),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'No active drying batch',
-                      style: TextStyle(fontSize: 16, color: subtextColor),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Start a new batch to begin tracking',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: subtextColor.withOpacity(0.7),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.of(
-                            context,
-                          ).pushNamed(AppRoutes.startNewBatch);
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: isDark
-                              ? const Color(0xFF1A2D4D)
-                              : const Color(0xFF1976D2),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24,
-                            vertical: 12,
+                    if (_isLoadingBatch)
+                      const CircularProgressIndicator()
+                    else if (_activeBatch != null) ...[
+                      Row(
+                        children: [
+                          Container(
+                            width: 10,
+                            height: 10,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Color(0xFF4CAF50),
+                            ),
                           ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Active',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: const Color(0xFF4CAF50),
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
-                        ),
-                        child: const Text(
-                          'Start New Batch',
-                          style: TextStyle(fontWeight: FontWeight.w600),
-                        ),
+                        ],
                       ),
-                    ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Crop',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: subtextColor,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ),
