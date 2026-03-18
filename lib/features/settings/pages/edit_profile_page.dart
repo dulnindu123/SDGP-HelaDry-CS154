@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 import '../../../services/session_store.dart';
 import '../../../widgets/primary_button.dart';
 import '../../../widgets/app_text_field.dart';
@@ -15,7 +18,6 @@ class EditProfilePage extends StatefulWidget {
 class _EditProfilePageState extends State<EditProfilePage> {
   late TextEditingController _nameController;
   late TextEditingController _emailController;
-  late TextEditingController _phoneController;
   late TextEditingController _locationController;
   bool _isSaving = false;
 
@@ -29,7 +31,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
     _emailController = TextEditingController(
       text: session.userEmail.isNotEmpty ? session.userEmail : '',
     );
-    _phoneController = TextEditingController(text: '+94 77 123 4567');
     _locationController = TextEditingController(text: 'Colombo, Sri Lanka');
   }
 
@@ -37,9 +38,50 @@ class _EditProfilePageState extends State<EditProfilePage> {
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
-    _phoneController.dispose();
     _locationController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() => _isSaving = true);
+      try {
+        final user = FirebaseAuth.instance.currentUser;
+        if (user == null) throw Exception('Not logged in');
+        
+        final storageRef = FirebaseStorage.instance
+            .ref()
+            .child('profile_images')
+            .child('${user.uid}.jpg');
+            
+        final file = File(pickedFile.path);
+        await storageRef.putFile(file);
+        
+        final url = await storageRef.getDownloadURL();
+        await user.updatePhotoURL(url);
+        
+        // This will force the UI to reflect new photo URL
+        setState(() {});
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Profile photo updated!')),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error uploading photo: $e')),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() => _isSaving = false);
+        }
+      }
+    }
   }
 
   void _handleSave() async {
@@ -86,6 +128,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
     final subtextColor = isDark
         ? const Color(0xFF8892B0)
         : const Color(0xFF64748B);
+    final user = FirebaseAuth.instance.currentUser;
+    final photoUrl = user?.photoURL;
 
     return Scaffold(
       appBar: AppBar(
@@ -132,6 +176,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           accentColor.withValues(alpha: 0.6),
                         ],
                       ),
+                      image: photoUrl != null
+                          ? DecorationImage(
+                              image: NetworkImage(photoUrl),
+                              fit: BoxFit.cover,
+                            )
+                          : null,
                       boxShadow: [
                         BoxShadow(
                           color: accentColor.withValues(alpha: 0.3),
@@ -140,31 +190,26 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         ),
                       ],
                     ),
-                    child: Center(
-                      child: Text(
-                        _nameController.text.isNotEmpty
-                            ? _nameController.text[0].toUpperCase()
-                            : 'D',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 36,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
+                    child: photoUrl == null 
+                        ? Center(
+                            child: Text(
+                              _nameController.text.isNotEmpty
+                                  ? _nameController.text[0].toUpperCase()
+                                  : 'D',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 36,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          )
+                        : null,
                   ),
                   Positioned(
                     bottom: 0,
                     right: 0,
                     child: GestureDetector(
-                      onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Photo upload not available'),
-                            behavior: SnackBarBehavior.floating,
-                          ),
-                        );
-                      },
+                      onTap: _isSaving ? null : _pickImage,
                       child: Container(
                         width: 34,
                         height: 34,
@@ -209,12 +254,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
               label: 'Email Address',
               hint: 'Enter your email',
               controller: _emailController,
-            ),
-            const SizedBox(height: 20),
-            AppTextField(
-              label: 'Phone Number',
-              hint: 'Enter your phone number',
-              controller: _phoneController,
+              readOnly: true,
             ),
             const SizedBox(height: 20),
             AppTextField(
