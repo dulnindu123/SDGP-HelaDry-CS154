@@ -2,10 +2,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 
 class BatchService {
-  final Firebase _auth = FirebaseAuth.instance;
-  final FirebaseDayabase _db = FirebaseDatabase.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseDatabase _db = FirebaseDatabase.instance;
 
-  Stream<<String,dynamic>?> listenToActiveBatch(){
+  Stream<Map<String, dynamic>?> listenToActiveBatch() {
     final user= _auth.currentUser;
     if(user==null) return Stream.value(null);
 
@@ -13,7 +13,7 @@ class BatchService {
 
     return ref.onValue.map((event){
       final data= event.snapshot.value;
-      if(data==null || data is ! Map) retrun null;
+      if (data == null || data is! Map) return null;
 
       final sessions=Map<String, dynamic>.from(data);
 
@@ -24,11 +24,11 @@ class BatchService {
           return{
             'sessionId':entry.key,
             'crop':session['crop']??0.0,
-            'startTime':session['stratTime']??0,
+            'startTime':session['startTime']??0,
             'deviceId':session['deviceId']??'device-001',
             'status':session['status'],
           };
-        }
+        });
       }
       return null;
     }

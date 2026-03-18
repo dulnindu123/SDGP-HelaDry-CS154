@@ -5,6 +5,7 @@ import '../../../app/routes.dart';
 import '../../../app/mock_data.dart';
 import '../../../widgets/app_card.dart';
 import '../../../backend/services/device_link_service.dart';
+import '../../../backend/services/batch_service.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -21,6 +22,10 @@ class _DashboardPageState extends State<DashboardPage> {
   int _airflow = 0;
   bool _isLoadingLive = true;
 
+  final BatchService _batchService = BatchService();
+  Map<String, dynamic>? _activeBatch;
+  bool _isLoadingBatch = true;
+
   static const String _deviceId = 'device-001';
 
   @override
@@ -33,6 +38,15 @@ class _DashboardPageState extends State<DashboardPage> {
           _humidity = data['humidity'] ?? 0.0;
           _airflow = data['airflow'] ?? 0;
           _isLoadingLive = false;
+        });
+      }
+    });
+
+    _batchService.listenToActiveBatch().listen((batch) {
+      if (mounted) {
+        setState(() {
+          _activeBatch = batch;
+          _isLoadingBatch = false;
         });
       }
     });
