@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../../services/session_store.dart';
 import '../../../widgets/primary_button.dart';
 import '../../../widgets/app_text_field.dart';
@@ -43,7 +44,21 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   void _handleSave() async {
     setState(() => _isSaving = true);
-    await Future.delayed(const Duration(milliseconds: 800));
+    
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        if (_nameController.text.isNotEmpty && user.displayName != _nameController.text) {
+          await user.updateDisplayName(_nameController.text);
+        }
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not update Firebase profile: $e')),
+      );
+    }
+    
     if (!mounted) return;
 
     final session = context.read<SessionStore>();

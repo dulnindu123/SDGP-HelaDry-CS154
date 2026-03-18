@@ -221,12 +221,12 @@ class _SettingsPageState extends State<SettingsPage> {
                     children: [
                       _buildDeviceInfoRow(
                         'Device ID:',
-                        'HELADRY-001',
+                        session.pairedDeviceId.isNotEmpty ? session.pairedDeviceId : 'No Device',
                         subtextColor,
                       ),
                       _buildDeviceInfoRow(
                         'Name:',
-                        MockData.defaultDeviceName,
+                        session.pairedDeviceName.isNotEmpty ? session.pairedDeviceName : 'Unknown',
                         subtextColor,
                       ),
                       _buildDeviceInfoRow(
@@ -250,9 +250,15 @@ class _SettingsPageState extends State<SettingsPage> {
               spacing: 8,
               runSpacing: 8,
               children: [
-                _buildDeviceButton(Icons.swap_horiz, 'Change Device', context),
-                _buildDeviceButton(Icons.wifi, 'Manage WiFi Networks', context),
-                _buildDeviceButton(Icons.settings, 'Configure WiFi', context),
+                _buildDeviceButton(Icons.swap_horiz, 'Change Device', context, onTap: () {
+                  Navigator.of(context).pushNamed(AppRoutes.pairDevice);
+                }),
+                _buildDeviceButton(Icons.wifi, 'Manage WiFi Networks', context, onTap: () {
+                  Navigator.of(context).pushNamed(AppRoutes.wifiStep1);
+                }),
+                _buildDeviceButton(Icons.settings, 'Configure WiFi', context, onTap: () {
+                  Navigator.of(context).pushNamed(AppRoutes.wifiStep1);
+                }),
               ],
             ),
             const SizedBox(height: 16),
@@ -461,9 +467,9 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Widget _buildDeviceButton(IconData icon, String label, BuildContext context) {
+  Widget _buildDeviceButton(IconData icon, String label, BuildContext context, {VoidCallback? onTap}) {
     return OutlinedButton.icon(
-      onPressed: () {
+      onPressed: onTap ?? () {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('$label not implemented')));

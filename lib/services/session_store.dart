@@ -1,7 +1,33 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // Active Drying Batch
 class SessionStore extends ChangeNotifier {
+  SharedPreferences? _prefs;
+
+  SessionStore() {
+    _initPrefs();
+  }
+
+  Future<void> _initPrefs() async {
+    _prefs = await SharedPreferences.getInstance();
+    _loadSettings();
+  }
+
+  void _loadSettings() {
+    if (_prefs == null) return;
+    _useCelsius = _prefs!.getBool('useCelsius') ?? true;
+    _tempOffset = _prefs!.getDouble('tempOffset') ?? 0.0;
+    _humidityOffset = _prefs!.getDouble('humidityOffset') ?? 0.0;
+    _overTempAlert = _prefs!.getBool('overTempAlert') ?? true;
+    _lowBatteryAlert = _prefs!.getBool('lowBatteryAlert') ?? true;
+    _sensorFaultAlert = _prefs!.getBool('sensorFaultAlert') ?? true;
+    // We only load user profile if not empty in prefs
+    _userName = _prefs!.getString('userName') ?? _userName;
+    _userEmail = _prefs!.getString('userEmail') ?? _userEmail;
+    notifyListeners();
+  }
+
   Map<String, dynamic>? _activeBatch;
 
   Map<String, dynamic>? get activeBatch => _activeBatch;
@@ -141,42 +167,50 @@ class SessionStore extends ChangeNotifier {
   // Settings
   void setUseCelsius(bool celsius) {
     _useCelsius = celsius;
+    _prefs?.setBool('useCelsius', celsius);
     notifyListeners();
   }
 
   void setTempOffset(double offset) {
     _tempOffset = offset;
+    _prefs?.setDouble('tempOffset', offset);
     notifyListeners();
   }
 
   void setHumidityOffset(double offset) {
     _humidityOffset = offset;
+    _prefs?.setDouble('humidityOffset', offset);
     notifyListeners();
   }
 
   void setOverTempAlert(bool val) {
     _overTempAlert = val;
+    _prefs?.setBool('overTempAlert', val);
     notifyListeners();
   }
 
   void setLowBatteryAlert(bool val) {
     _lowBatteryAlert = val;
+    _prefs?.setBool('lowBatteryAlert', val);
     notifyListeners();
   }
 
   void setSensorFaultAlert(bool val) {
     _sensorFaultAlert = val;
+    _prefs?.setBool('sensorFaultAlert', val);
     notifyListeners();
   }
 
   // Profile
   void setUserName(String name) {
     _userName = name;
+    _prefs?.setString('userName', name);
     notifyListeners();
   }
 
   void setUserEmail(String email) {
     _userEmail = email;
+    _prefs?.setString('userEmail', email);
     notifyListeners();
   }
 }
