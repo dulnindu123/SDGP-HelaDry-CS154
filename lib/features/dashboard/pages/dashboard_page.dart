@@ -290,6 +290,42 @@ class _DashboardPageState extends State<DashboardPage> {
                                       color: subtextColor,
                                     ),
                                   ),
+                                  Text(
+                                    '${_activeBatch!['crop']}',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: isDark
+                                          ? const Color(0xFFE6F1FF)
+                                          : const Color(0xFF1A2D4D),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    'Weight',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: subtextColor,
+                                    ),
+                                    Text(
+            '${_activeBatch!['weight']} kg',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: isDark
+                  ? const Color(0xFFE6F1FF)
+                  : const Color(0xFF1A2D4D),
+            ),
+          ),
+        ],
+      ),
+    ],
+  ),
+                                  ),
                                 ],
                               ),
                             ],

@@ -1,8 +1,7 @@
 import 'package:firebase_database/firebase_database.dart';
 
 // Ensure that the Firebase core package is initialized before using FirebaseDatabase.
-import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter_application_1/firebase_options.dart'; // Updated with the correct project name.
+// Updated with the correct project name.
 
 class LiveDataService {
   final FirebaseDatabase _db = FirebaseDatabase.instance;
