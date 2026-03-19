@@ -764,3 +764,51 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 }
+
+class _ActiveBatchTimerCard extends StatefulWidget {
+  final Map<String, dynamic> batch;
+  final bool isDark;
+  final Color subtextColor;
+  const _ActiveBatchTimerCard({
+    required this.batch;
+    required this.isDark,
+    required this.subtextColor
+  });
+@override
+  State<_ActiveBatchTimerCard> createState() => _ActiveBatchTimerCardState();
+}
+
+class _ActiveBatchTimerCardState extends State<_ActiveBatchTimerCard> {
+  late DateTime _endTime;
+  Duration _remaining = Duration.zero;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _initTimer();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) => _onTick());
+  }
+
+  void _initTimer() {
+    final durationHours = (widget.batch['durationEstimate'] is int)
+        ? widget.batch['durationEstimate'] as int
+        : int.tryParse(widget.batch['durationEstimate'].toString()) ?? 0;
+    final startTime = widget.batch['startTime'] as int;
+    final start = DateTime.fromMillisecondsSinceEpoch(startTime);
+    _endTime = start.add(Duration(hours: durationHours));
+    _remaining = _endTime.difference(DateTime.now());
+    if (_remaining.isNegative) _remaining = Duration.zero;
+  }
+
+  void _onTick() {
+    setState(() {
+      _remaining = _endTime.difference(DateTime.now());
+      if (_remaining.isNegative) _remaining = Duration.zero;
+    });
+  }
+  
+
+
+
+}
