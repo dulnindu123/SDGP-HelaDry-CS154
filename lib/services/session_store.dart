@@ -112,6 +112,11 @@ class SessionStore extends ChangeNotifier {
     _fanSpeed = 50;
     _heaterOn = false;
     _targetTemp = 55;
+
+    // Clear persisted user data so a new login doesn't see stale values
+    _prefs?.remove('userName');
+    _prefs?.remove('userEmail');
+
     notifyListeners();
   }
 

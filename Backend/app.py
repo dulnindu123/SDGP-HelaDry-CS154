@@ -5,6 +5,7 @@ from .extensions import init_firebase
 
 from .routes.device_routes import device_bp
 from .routes.session_routes import session_bp
+from .routes.user_routes import user_bp
 
 
 def create_app():
@@ -23,6 +24,7 @@ def create_app():
     # Register Blueprints
     app.register_blueprint(device_bp, url_prefix="/device")
     app.register_blueprint(session_bp, url_prefix="/session")
+    app.register_blueprint(user_bp, url_prefix="/user")
 
     # Health check route
     @app.route("/")
