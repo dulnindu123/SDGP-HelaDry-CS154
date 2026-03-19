@@ -809,6 +809,124 @@ class _ActiveBatchTimerCardState extends State<_ActiveBatchTimerCard> {
   }
   
 
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  String _formatDuration(Duration d) {
+    final h = d.inHours;
+    final m = d.inMinutes % 60;
+    final s = d.inSeconds % 60;
+    return '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final batch = widget.batch;
+    final isDark = widget.isDark;
+    final subtextColor = widget.subtextColor;
+
+    return Column(
+      children: [
+        Text(
+          'Active Drying Batch',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: isDark ? const Color(0xFFE6F1FF) : const Color(0xFF1A2D4D),
+          ),
+        ),
+        const SizedBox(height: 16),
+        Text(
+          '${batch['crop']}',
+          style: TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+            color: isDark ? const Color(0xFFE6F1FF) : const Color(0xFF1A2D4D),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.scale, size: 18, color: subtextColor),
+            const SizedBox(width: 4),
+            Text(
+              '${batch['weight']} kg',
+              style: TextStyle(fontSize: 15, color: subtextColor),
+            ),
+            const SizedBox(width: 16),
+            Icon(Icons.thermostat, size: 18, color: subtextColor),
+            const SizedBox(width: 4),
+            Text(
+              '${batch['targetTemp']}°C',
+              style: TextStyle(fontSize: 15, color: subtextColor),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.hourglass_bottom, color: Colors.amber, size: 22),
+            const SizedBox(width: 6),
+            Text(
+              _remaining > Duration.zero
+                  ? 'Time Left: ${_formatDuration(_remaining)}'
+                  : 'Batch Complete!',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: _remaining > Duration.zero
+                    ? Colors.amber
+                    : Colors.green,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: () async {
+              try {
+                // Will be replaced with backend API call later
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Stop batch coming soon!'),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Error: $e')),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24,
+                vertical: 12,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text(
+              'Stop Batch',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 
 
 }
