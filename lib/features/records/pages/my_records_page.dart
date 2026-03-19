@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
+import '../../../services/session_store.dart';
 
 class MyRecordsPage extends StatefulWidget {
   const MyRecordsPage({super.key});
@@ -126,6 +128,7 @@ class _MyRecordsPageState extends State<MyRecordsPage> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final session = context.watch<SessionStore>();
 
     final records = _filteredRecords;
     final totalBatches = _records.length;
@@ -317,7 +320,7 @@ class _MyRecordsPageState extends State<MyRecordsPage> {
                           padding: const EdgeInsets.all(20),
                           itemCount: records.length,
                           itemBuilder: (ctx, i) =>
-                              _buildRecordItem(records[i], isDark),
+                              _buildRecordItem(records[i], isDark, session),
                         ),
                 ),
               ],
@@ -355,7 +358,7 @@ class _MyRecordsPageState extends State<MyRecordsPage> {
     );
   }
 
-  Widget _buildRecordItem(Map<String, dynamic> record, bool isDark) {
+  Widget _buildRecordItem(Map<String, dynamic> record, bool isDark, SessionStore session) {
     final isActive = (record['status'] ?? '') == 'active';
 
     // Helper to format date/time
@@ -409,7 +412,13 @@ class _MyRecordsPageState extends State<MyRecordsPage> {
                   ),
                 ),
                 Text(
-                  '${record['weight_kg'] ?? 0}kg  •  ${record['trays'] ?? 0} trays  •  ${record['target_temperature'] ?? 0}°C',
+                  '${record['weight_kg'] ?? 0}kg  •  ${record['trays'] ?? 0} trays  •  ${
+                    record['target_temperature'] == null
+                        ? '0°C'
+                        : session.useCelsius
+                            ? '${record['target_temperature']}°C'
+                            : '${((record['target_temperature'] is num ? record['target_temperature'].toDouble() : double.tryParse(record['target_temperature'].toString()) ?? 0.0) * 9 / 5 + 32).round()}°F'
+                  }',
                   style: TextStyle(
                     fontSize: 12,
                     color: isDark

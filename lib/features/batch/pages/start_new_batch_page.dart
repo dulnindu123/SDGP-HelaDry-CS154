@@ -266,7 +266,12 @@ class _StartNewBatchPageState extends State<StartNewBatchPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Target Temp: ${_targetTemp.toInt()}°C', style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text(
+                  context.watch<SessionStore>().useCelsius 
+                      ? 'Target Temp: ${_targetTemp.toInt()}°C'
+                      : 'Target Temp: ${((_targetTemp * 9 / 5) + 32).round()}°F',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
                 if (_isAutoMode) Text('Auto-Optimized', style: TextStyle(color: accentColor, fontSize: 12)),
               ],
             ),

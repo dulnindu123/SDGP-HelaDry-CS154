@@ -91,6 +91,11 @@ class SessionStore extends ChangeNotifier {
     _isLoggedIn = true;
     _userName = name.isNotEmpty ? name : 'User';
     _userEmail = email.isNotEmpty ? email : 'user@example.com';
+
+    // Persist to SharedPreferences so the name survives app restarts
+    _prefs?.setString('userName', _userName);
+    _prefs?.setString('userEmail', _userEmail);
+
     notifyListeners();
   }
 

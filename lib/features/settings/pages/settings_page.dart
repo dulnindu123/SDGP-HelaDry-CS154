@@ -150,6 +150,46 @@ class _SettingsPageState extends State<SettingsPage> {
             const Divider(),
             const SizedBox(height: 16),
 
+            // ── Preferences ──
+            _sectionTitle('Preferences', isDark),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.thermostat,
+                          size: 18,
+                          color: accentColor,
+                        ),
+                        const SizedBox(width: 8),
+                        const Text(
+                          'Temperature Unit',
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ),
+                    Text(
+                      session.useCelsius ? 'Celsius (°C)' : 'Fahrenheit (°F)',
+                      style: TextStyle(fontSize: 12, color: subtextColor),
+                    ),
+                  ],
+                ),
+                Switch(
+                  value: session.useCelsius,
+                  onChanged: (val) => session.setUseCelsius(val),
+                  // activeColor: accentColor, // Option formatting
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            const Divider(),
+            const SizedBox(height: 16),
+
             // ── Connection Mode ──
             _sectionTitle('Connection Mode', isDark),
             const SizedBox(height: 8),

@@ -45,9 +45,12 @@ class _LoginPageState extends State<LoginPage> {
 
       if (!mounted) return;
 
-      // 2. Update local session store
+      // 2. Update local session store with name + email from Firebase
       final session = context.read<SessionStore>();
-      session.login(email: userCredential.user?.email ?? _emailController.text);
+      session.login(
+        name: userCredential.user?.displayName ?? '',
+        email: userCredential.user?.email ?? _emailController.text,
+      );
 
       // 3. Navigate to the next screen
       Navigator.of(context).pushReplacementNamed(AppRoutes.connectionMode);

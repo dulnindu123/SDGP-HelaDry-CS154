@@ -365,7 +365,9 @@ class _DashboardPageState extends State<DashboardPage> {
                           context,
                           Icons.thermostat,
                           'Temperature',
-                          '${(metrics['temperature'] as double).toStringAsFixed(0)}°C',
+                          session.useCelsius 
+                              ? '${(metrics['temperature'] as double).toStringAsFixed(0)}°C'
+                              : '${((metrics['temperature'] as double) * 9 / 5 + 32).toStringAsFixed(0)}°F',
                           const Color(0xFFEF5350),
                           isDark,
                         ),
@@ -730,6 +732,8 @@ class _ActiveBatchTimerCardState extends State<_ActiveBatchTimerCard> {
     final batch = widget.batch;
     final isDark = widget.isDark;
     final subtextColor = widget.subtextColor;
+    final session = context.watch<SessionStore>();
+
     return Column(
       children: [
         Text(
@@ -775,7 +779,11 @@ class _ActiveBatchTimerCardState extends State<_ActiveBatchTimerCard> {
             Icon(Icons.thermostat, size: 18, color: subtextColor),
             const SizedBox(width: 4),
             Text(
-              '${batch["temperature"] ?? "-"}°C',
+              batch["temperature"] == null 
+                  ? "-"
+                  : session.useCelsius
+                      ? '${batch["temperature"]}°C'
+                      : '${((batch["temperature"] is num ? batch["temperature"].toDouble() : double.tryParse(batch["temperature"].toString()) ?? 0.0) * 9 / 5 + 32).round()}°F',
               style: TextStyle(fontSize: 15, color: subtextColor),
             ),
             const SizedBox(width: 16),
