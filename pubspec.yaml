@@ -1,6 +1,6 @@
 name: flutter_application_1
 description: "HelaDry - Solar-Powered Food Dehydration App"
-publish_to: 'none'
+publish_to: "none"
 version: 1.0.0+1
 
 environment:
@@ -16,8 +16,8 @@ dependencies:
   firebase_core: ^4.5.0
   firebase_auth: ^6.2.0
   http: ^1.6.0
-image_picker: ^1.2.1
-firebase_storage: ^13.1.0
+  image_picker: ^1.2.1
+  firebase_storage: ^13.1.0
   firebase_database: ^12.1.4
 
 dev_dependencies:
