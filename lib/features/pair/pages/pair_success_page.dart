@@ -4,6 +4,7 @@ import '../../../services/session_store.dart';
 import '../../../app/routes.dart';
 import '../../../widgets/primary_button.dart';
 import '../../../widgets/mode_toggle_button.dart';
+import '../../../services/ble_service.dart';
 
 class PairSuccessPage extends StatelessWidget {
   const PairSuccessPage({super.key});
@@ -179,14 +180,19 @@ class PairSuccessPage extends StatelessWidget {
               PrimaryButton(
                 label: 'Continue',
                 onPressed: () {
+                  final ble = context.read<BleService>();
+                  final isAlreadyConnected = ble.isConnected;
+
                   if (session.connectionMode == 'online') {
-                    Navigator.of(
-                      context,
-                    ).pushReplacementNamed(AppRoutes.wifiStep1);
+                    // Online mode: skip BLE step if already connected
+                    if (isAlreadyConnected) {
+                      Navigator.of(context).pushReplacementNamed(AppRoutes.wifiStep2);
+                    } else {
+                      Navigator.of(context).pushReplacementNamed(AppRoutes.wifiStep1);
+                    }
                   } else {
-                    Navigator.of(
-                      context,
-                    ).pushReplacementNamed(AppRoutes.dashboard);
+                    // Offline mode: go straight to dashboard
+                    Navigator.of(context).pushReplacementNamed(AppRoutes.dashboard);
                   }
                 },
               ),

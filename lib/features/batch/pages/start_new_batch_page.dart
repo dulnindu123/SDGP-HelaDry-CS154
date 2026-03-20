@@ -177,7 +177,7 @@ class _StartNewBatchPageState extends State<StartNewBatchPage> {
       final token = await user?.getIdToken();
 
       final response = await http.post(
-        Uri.parse('http://10.0.2.2:5000/device/stop'),
+        Uri.parse('http://172.30.161.140:5000/device/stop'),
         headers: {
           "Content-Type": "application/json",
           "Authorization": "Bearer $token",
@@ -248,7 +248,7 @@ class _StartNewBatchPageState extends State<StartNewBatchPage> {
       
       String? firebaseToken = await user.getIdToken(true); 
 
-      final url = Uri.parse('http://10.0.2.2:5000/device/start'); 
+      final url = Uri.parse('http://172.30.161.140:5000/device/start'); 
       
       final response = await http.post(
         url,
@@ -711,7 +711,12 @@ class _StartNewBatchPageState extends State<StartNewBatchPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Target Temp: ${_targetTemp.toInt()}°C', style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text(
+                  context.watch<SessionStore>().useCelsius 
+                      ? 'Target Temp: ${_targetTemp.toInt()}°C'
+                      : 'Target Temp: ${((_targetTemp * 9 / 5) + 32).round()}°F',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
                 if (_isAutoMode) Text('Auto-Optimized', style: TextStyle(color: accentColor, fontSize: 12)),
               ],
             ),

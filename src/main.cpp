@@ -51,7 +51,7 @@ static void wifiMaintain();
 static void bleMaintainAdvertising();
 
 // ========================= FIRMWARE VERSION =========================
-#define FW_VERSION "2.1.6"
+#define FW_VERSION "2.1.9"
 
 // ========================= DEVICE =========================
 // DEVICE_ID is now handled dynamically using bleDeviceName
@@ -79,10 +79,10 @@ static const float OVER_TEMP_THRESHOLD_C   = 75.0f;
 static const float LOW_BATTERY_THRESHOLD_V = 11.5f;
 
 // ========================= TIMING =========================
-static const uint32_t SENSOR_READ_INTERVAL_MS    = 2000;
-static const uint32_t FIREBASE_PUSH_INTERVAL_MS  = 5000;
-static const uint32_t COMMAND_POLL_INTERVAL_MS   = 2000;
-static const uint32_t BLE_NOTIFY_INTERVAL_MS     = 1000;
+static const uint32_t SENSOR_READ_INTERVAL_MS    = 500;   // 2s -> 0.5s
+static const uint32_t FIREBASE_PUSH_INTERVAL_MS  = 1000;  // 5s -> 1s
+static const uint32_t COMMAND_POLL_INTERVAL_MS   = 400;   // 2s -> 0.4s
+static const uint32_t BLE_NOTIFY_INTERVAL_MS     = 300;   // 1s -> 0.3s
 static const uint32_t WIFI_RECONNECT_INTERVAL_MS = 10000;
 static const uint32_t LOG_SYNC_INTERVAL_MS       = 30000;
 static const uint32_t WIFI_CONNECT_TIMEOUT_MS    = 15000;
@@ -187,6 +187,7 @@ static uint32_t lastCommandPollMs  = 0;
 static uint32_t lastBleNotifyMs    = 0;
 static uint32_t lastWiFiTryMs      = 0;
 static uint32_t lastLogSyncMs      = 0;
+static uint32_t lastWifiMaintainMs = 0;
 
 // BLE
 static BLEServer         *pServer       = nullptr;
@@ -307,7 +308,8 @@ static void scaleInit() {
 
 static bool readWeightOnce(float &out_g) {
   if (!scale.is_ready()) return false;
-  out_g = scale.get_units(5);
+  // Reduced samples (2 instead of 5) to prevent blocking the BLE loop for too long
+  out_g = scale.get_units(2); 
   return true;
 }
 
@@ -610,38 +612,79 @@ static void wifiMaintain() {
   }
 }
 
+// Firebase command polling helpers (must be defined before firebaseInitIfWiFi)
+static bool fbGetBool(const String &path, bool &out) {
+  if (WiFi.status() != WL_CONNECTED || !Firebase.ready()) return false;
+  if (Firebase.RTDB.getBool(&fbdo, path.c_str())) { out = fbdo.boolData(); return true; }
+  return false;
+}
+static bool fbGetFloat(const String &path, float &out) {
+  if (WiFi.status() != WL_CONNECTED || !Firebase.ready()) return false;
+  if (Firebase.RTDB.getFloat(&fbdo, path.c_str())) { out = fbdo.floatData(); return true; }
+  return false;
+}
+static bool fbGetString(const String &path, String &out) {
+  if (WiFi.status() != WL_CONNECTED || !Firebase.ready()) return false;
+  if (Firebase.RTDB.getString(&fbdo, path.c_str())) { out = fbdo.stringData(); return true; }
+  return false;
+}
+static void fbSetBool(const String &path, bool v) {
+  if (WiFi.status() != WL_CONNECTED || !Firebase.ready()) return;
+  Firebase.RTDB.setBool(&fbdo, path.c_str(), v);
+}
+static void fbSetString(const String &path, const String &v) {
+  if (WiFi.status() != WL_CONNECTED || !Firebase.ready()) return;
+  Firebase.RTDB.setString(&fbdo, path.c_str(), v.c_str());
+}
+
 // ========================= FIREBASE =========================
 static void firebaseInitIfWiFi() {
   if (WiFi.status() != WL_CONNECTED) {
     Serial.println("[Firebase] Skipped — no WiFi");
     return;
   }
+  
   if (firebaseInitialized) {
-    Serial.println("[Firebase] Already initialized");
+    Serial.println("[Firebase] Already configured");
     return;
   }
 
-    fbConfig.api_key      = API_KEY;
-    fbConfig.database_url = DATABASE_URL;
+  Serial.println("[Firebase] Configuring with provided URL and Key...");
+  
+  // [FIX] Ensure credentials are valid and assigned
+  if (strlen(API_KEY) == 0 || strlen(DATABASE_URL) == 0) {
+      Serial.println("[Firebase] ERROR: API_KEY or DATABASE_URL is empty in secrets.h!");
+      return;
+  }
 
-    // Anonymous auth — no email or password needed
-    // Firebase issues a temporary token automatically
-    // The Flutter app handles real user identity separately
-    fbConfig.token_status_callback = tokenStatusCallback;
+  fbConfig.api_key      = API_KEY;
+  fbConfig.database_url = DATABASE_URL;
+  fbAuth.user.email     = USER_EMAIL;
+  fbAuth.user.password  = USER_PASSWORD;
 
-    Firebase.reconnectWiFi(true);
-    Firebase.begin(&fbConfig, &fbAuth);
+  fbConfig.token_status_callback = tokenStatusCallback;
+  
+  // [FIX] Specific settings for easier auth
+  fbConfig.signer.test_mode = true; 
 
-      // Sign in anonymously (signUp with empty email and password)
-      if (Firebase.signUp(&fbConfig, &fbAuth, "", "")) {
-        Serial.println("[Firebase] Anonymous sign-in initiated");
-      } else {
-        Serial.println("[Firebase] Anonymous sign-in failed — will retry");
-      }
+  Firebase.reconnectWiFi(true);
+  Firebase.begin(&fbConfig, &fbAuth);
 
-    fbdo.setResponseSize(4096);
-    firebaseInitialized = true;
-    Serial.println("[Firebase] Init done — using anonymous auth");
+  Serial.println("[Firebase] Initializing with Email/Password Auth...");
+  firebaseInitialized = true;
+
+  // Safety Reset: prevents auto-start from stale Firebase data (Safe Start)
+  String cmdBase = buildPathCommands();
+  String cfgBase = buildPathConfig();
+  fbSetString(cmdBase + "/session_cmd", "");
+  fbSetBool(cfgBase + "/auto_heat_enabled", false);
+  fbSetBool(cmdBase + "/heater_manual_on", false);
+  fbSetBool(cmdBase + "/heater_force_off", false);
+  fbSetBool(cmdBase + "/tare", false);
+  
+  Serial.println("[Firebase] Safe-Reset executed.");
+
+  fbdo.setResponseSize(4096);
 }
 
 static void pushLiveToFirebase() {
@@ -696,31 +739,6 @@ static void pushHistoryToFirebase() {
   if (!Firebase.RTDB.pushJSON(&fbdo, buildPathHistory().c_str(), &json)) {
     Serial.printf("[Firebase] History push failed: %s\n", fbdo.errorReason().c_str());
   }
-}
-
-// Firebase command polling (for Wi-Fi mode)
-static bool fbGetBool(const String &path, bool &out) {
-  if (WiFi.status() != WL_CONNECTED || !Firebase.ready()) return false;
-  if (Firebase.RTDB.getBool(&fbdo, path.c_str())) { out = fbdo.boolData(); return true; }
-  return false;
-}
-static bool fbGetFloat(const String &path, float &out) {
-  if (WiFi.status() != WL_CONNECTED || !Firebase.ready()) return false;
-  if (Firebase.RTDB.getFloat(&fbdo, path.c_str())) { out = fbdo.floatData(); return true; }
-  return false;
-}
-static bool fbGetString(const String &path, String &out) {
-  if (WiFi.status() != WL_CONNECTED || !Firebase.ready()) return false;
-  if (Firebase.RTDB.getString(&fbdo, path.c_str())) { out = fbdo.stringData(); return true; }
-  return false;
-}
-static void fbSetBool(const String &path, bool v) {
-  if (WiFi.status() != WL_CONNECTED || !Firebase.ready()) return;
-  Firebase.RTDB.setBool(&fbdo, path.c_str(), v);
-}
-static void fbSetString(const String &path, const String &v) {
-  if (WiFi.status() != WL_CONNECTED || !Firebase.ready()) return;
-  Firebase.RTDB.setString(&fbdo, path.c_str(), v.c_str());
 }
 
 static void pollFirebaseCommands() {
@@ -791,6 +809,41 @@ static void pollFirebaseCommands() {
     fbSetBool(cmdBase+"/emergency_stop", false);
     Serial.println("[CMD] EMERGENCY STOP via Firebase");
   }}
+
+  // WiFi credentials from Firebase (database-based provisioning)
+  { String ssid;
+    if (fbGetString(cmdBase+"/wifi_ssid", ssid) && ssid.length() > 0) {
+      String pass = "";
+      fbGetString(cmdBase+"/wifi_pass", pass);
+      
+      // Clear from Firebase immediately for security
+      fbSetString(cmdBase+"/wifi_ssid", "");
+      fbSetString(cmdBase+"/wifi_pass", "");
+      
+      // Start WiFi connection
+      provisioningSsid = ssid;
+      provisioningPass = pass;
+      WiFi.disconnect();
+      WiFi.begin(ssid.c_str(), pass.c_str());
+      pendingWifiConnect = true;
+      wifiConnectStartMs = nowMs();
+      wifiSaveCredentials(ssid, pass);
+      Serial.printf("[Firebase] WiFi provisioning started for: %s\n", ssid.c_str());
+    }
+  }
+
+  // Clear WiFi credentials from Firebase command
+  { bool clearCreds = false;
+    if (fbGetBool(cmdBase+"/clear_wifi_creds", clearCreds) && clearCreds) {
+      prefs.begin("wifi", false);
+      prefs.clear();
+      prefs.end();
+      WiFi.disconnect(true);
+      wifiConnected = false;
+      fbSetBool(cmdBase+"/clear_wifi_creds", false);
+      Serial.println("[Firebase] WiFi credentials cleared from NVS");
+    }
+  }
 }
 
 // ========================= BLE CALLBACKS =========================
@@ -798,6 +851,22 @@ class ServerCallbacks : public BLEServerCallbacks {
   void onConnect(BLEServer* pSvr) override {
     bleConnected = true;
     Serial.println("[BLE] Client connected");
+
+    // [FIX] Immediate WiFi Status Push:
+    // If we are already connected to WiFi when a phone joins, tell it immediately!
+    if (WiFi.status() == WL_CONNECTED) {
+        JsonDocument doc;
+        doc["cmd"] = "WIFI_CONNECT_RESULT";
+        doc["status"] = "connected";
+        doc["ip"] = WiFi.localIP().toString();
+        String out;
+        serializeJson(doc, out);
+        if (pAckChar) {
+            pAckChar->setValue(out.c_str());
+            pAckChar->notify();
+            Serial.println("[BLE] Sent auto-WiFi-success to new client");
+        }
+    }
   }
   void onDisconnect(BLEServer* pSvr) override {
     bleConnected = false;
@@ -820,7 +889,7 @@ static void sendBleAck(const String &cmd, const String &status) {
 class CommandCallbacks : public BLECharacteristicCallbacks {
   void onWrite(BLECharacteristic *pChar) override {
     String val = pChar->getValue().c_str();
-    Serial.printf("[BLE] Command received: %s\n", val.c_str());
+    Serial.printf("[BLE] Command in (%d bytes): %s\n", val.length(), val.c_str());
 
     // Parse JSON command
     JsonDocument doc;
@@ -831,24 +900,30 @@ class CommandCallbacks : public BLECharacteristicCallbacks {
       val.toUpperCase();
 
       if (val == "START_SESSION") {
+        sendBleAck("START_SESSION", "received"); // [SPEED] Immediate ACK
         startSession("Unknown", 50.0f, filteredWeight_g);
         sendBleAck("START_SESSION", "done");
       } else if (val == "STOP_SESSION") {
+        sendBleAck("STOP_SESSION", "received"); // [SPEED] Immediate ACK
         stopSession();
         sendBleAck("STOP_SESSION", "done");
       } else if (val == "PAUSE_SESSION") {
+        sendBleAck("PAUSE_SESSION", "received"); // [SPEED] Immediate ACK
         pauseSession();
         sendBleAck("PAUSE_SESSION", "done");
       } else if (val == "RESUME_SESSION") {
+        sendBleAck("RESUME_SESSION", "received"); // [SPEED] Immediate ACK
         resumeSession();
         sendBleAck("RESUME_SESSION", "done");
       } else if (val == "EMERGENCY_STOP") {
+        sendBleAck("EMERGENCY_STOP", "received"); // [SPEED] Immediate ACK
         setHeater(false);
         setFanSpeed(0);
         if (sessionState == SESSION_RUNNING) sessionState = SESSION_PAUSED;
         sendBleAck("EMERGENCY_STOP", "done");
         Serial.println("[BLE] EMERGENCY STOP executed");
       } else if (val == "TARE") {
+        sendBleAck("TARE", "received"); // [SPEED] Immediate ACK
         tareScale();
         sendBleAck("TARE", "done");
       } else if (val == "SCAN_WIFI") {
@@ -865,6 +940,7 @@ class CommandCallbacks : public BLECharacteristicCallbacks {
     cmd.toUpperCase();
 
     if (cmd == "START_SESSION") {
+      sendBleAck("START_SESSION", "received"); // [SPEED] Immediate ACK
       String crop     = doc["crop"] | "Unknown";
       float tTemp     = doc["target_temp"] | 50.0f;
       float weight    = doc["weight"] | 0.0f;
@@ -872,14 +948,17 @@ class CommandCallbacks : public BLECharacteristicCallbacks {
       sendBleAck("START_SESSION", "done");
     }
     else if (cmd == "STOP_SESSION") {
+      sendBleAck("STOP_SESSION", "received"); // [SPEED] Immediate ACK
       stopSession();
       sendBleAck("STOP_SESSION", "done");
     }
     else if (cmd == "PAUSE_SESSION") {
+      sendBleAck("PAUSE_SESSION", "received"); // [SPEED] Immediate ACK
       pauseSession();
       sendBleAck("PAUSE_SESSION", "done");
     }
     else if (cmd == "RESUME_SESSION") {
+      sendBleAck("RESUME_SESSION", "received"); // [SPEED] Immediate ACK
       resumeSession();
       sendBleAck("RESUME_SESSION", "done");
     }
@@ -894,6 +973,10 @@ class CommandCallbacks : public BLECharacteristicCallbacks {
       }
       if (doc.containsKey("target_temp")) {
         target_temp_c = doc["target_temp"] | 35.0f;
+        // Enable auto-heat so the heater actually responds to the target temperature
+        auto_heat_enabled = true;
+        manual_heater_mode = false;
+        Serial.printf("[BLE] Target temp set to %.1f°C, auto-heat enabled\n", target_temp_c);
       }
       if (doc.containsKey("temp_offset")) {
         temp_offset = doc["temp_offset"] | 0.0f;
@@ -909,6 +992,10 @@ class CommandCallbacks : public BLECharacteristicCallbacks {
       if (ssid.length() > 0) {
         provisioningSsid = ssid;
         provisioningPass = pass;
+
+        // [SPEED OPTIMIZATION] Immediate ACK for the app
+        sendBleAck("SET_WIFI_CREDS", "received");
+
         WiFi.disconnect();
         WiFi.begin(ssid.c_str(), pass.c_str());
         pendingWifiConnect = true;
@@ -936,6 +1023,16 @@ class CommandCallbacks : public BLECharacteristicCallbacks {
     else if (cmd == "SCAN_WIFI") {
       pendingWifiScan = true;
       sendBleAck("SCAN_WIFI", "started");
+    }
+    else if (cmd == "CLEAR_WIFI_CREDS") {
+      // Clear stored WiFi credentials from NVS
+      prefs.begin("wifi", false);
+      prefs.clear();
+      prefs.end();
+      WiFi.disconnect(true); // disconnect and erase stored creds
+      wifiConnected = false;
+      sendBleAck("CLEAR_WIFI_CREDS", "done");
+      Serial.println("[BLE] WiFi credentials cleared from NVS");
     }
     else {
       sendBleAck(cmd, "failed");
@@ -981,15 +1078,15 @@ static void bleInit() {
   pAdv->addServiceUUID(SERVICE_UUID);
   pAdv->setScanResponse(true);
   pAdv->setMinPreferred(0x06);
-  pAdv->setMinPreferred(0x12);
+  pAdv->setMaxPreferred(0x12);
   BLEDevice::startAdvertising();
   bleAdvertising = true;
-  Serial.println("[BLE] Advertising started");
+  Serial.printf("[BLE] Service started. Name: %s\n", bleDeviceName.c_str());
 }
 
 static void bleMaintainAdvertising() {
   if (!bleConnected && !bleAdvertising) {
-    delay(500);  // small delay before re-advertising
+    delay(100);  // brief settle time before re-advertising
     BLEDevice::startAdvertising();
     bleAdvertising = true;
     Serial.println("[BLE] Re-advertising started");
@@ -1029,10 +1126,13 @@ static void bleNotifyState() {
   String out;
   serializeJson(doc, out);
 
-  // BLE characteristic max is usually 512 bytes; truncate if needed
-  if (out.length() < 500) {
+  // [v2.1.9] More robust notification
+  if (out.length() > 0) {
     pStateChar->setValue(out.c_str());
     pStateChar->notify();
+    if (out.length() > 500) {
+      Serial.printf("[BLE] WARNING: State JSON large (%d bytes)\n", out.length());
+    }
   }
 }
 
@@ -1091,6 +1191,13 @@ void setup() {
     bleAdvertising ? "ADVERTISING" : "OFF");
 }
 
+bool isSystemReady() {
+  // Connection is "fully established" if:
+  // 1. A phone is connected via Bluetooth
+  // 2. OR WiFi is connected AND Firebase is ready
+  return bleConnected || (WiFi.status() == WL_CONNECTED && Firebase.ready());
+}
+
 // ========================= LOOP =========================
 void loop() {
   uint32_t now = nowMs();
@@ -1098,9 +1205,14 @@ void loop() {
   // Handle WiFi Scan Request
   if (pendingWifiScan) {
     pendingWifiScan = false;
+    // [SPEED] Stop other tasks to give WiFi/BLE full antenna priority
+    lastSensorReadMs = now; 
+    lastFirebasePushMs = now;
+    
     WiFi.scanNetworks(true);  // async = true, non-blocking
     scanResultPending = true;
     scanStartMs = now;
+    Serial.println("[WiFi] Async scan started...");
   }
 
   // Check WiFi Scan Results
@@ -1111,21 +1223,23 @@ void loop() {
       JsonDocument doc;
       doc["cmd"] = "WIFI_SCAN_RESULT";
       JsonArray networks = doc["networks"].to<JsonArray>();
-      int limit = n > 8 ? 8 : n;
+      // Show up to 10 networks for better coverage, sorted by signal strength
+      int limit = n > 10 ? 10 : n;
       for (int i = 0; i < limit; i++) {
         JsonObject net = networks.add<JsonObject>();
-        net["ssid"] = WiFi.SSID(i);
-        net["rssi"] = WiFi.RSSI(i);
-        net["secure"] = (WiFi.encryptionType(i) != WIFI_AUTH_OPEN);
+        net["s"] = WiFi.SSID(i);
+        net["r"] = WiFi.RSSI(i);
+        net["o"] = (WiFi.encryptionType(i) != WIFI_AUTH_OPEN); // 'o' for open/auth
       }
       String out;
       serializeJson(doc, out);
-      if (pAckChar && bleConnected && out.length() < 500) {
+      if (pAckChar && bleConnected) {
         pAckChar->setValue(out.c_str());
         pAckChar->notify();
+        Serial.printf("[WiFi] Scan results sent (%d bytes)\n", out.length());
       }
       WiFi.scanDelete();
-    } else if (n == WIFI_SCAN_FAILED || (now - scanStartMs > 12000)) {
+    } else if (n == WIFI_SCAN_FAILED || (now - scanStartMs > 8000)) {
       scanResultPending = false;
       WiFi.scanDelete();
       if (pAckChar && bleConnected) {
@@ -1177,47 +1291,62 @@ void loop() {
     }
   }
 
-  // WiFi maintenance
-  if (!pendingWifiConnect) {
+  // Basic maintenance (always run)
+  if (now - lastWifiMaintainMs >= 5000) {
+    lastWifiMaintainMs = now;
     wifiMaintain();
   }
 
   // BLE re-advertise if disconnected
   bleMaintainAdvertising();
 
-  // Sensor reading
-  if (now - lastSensorReadMs >= SENSOR_READ_INTERVAL_MS) {
-    lastSensorReadMs = now;
-    readAllSensors();
-    checkSafetyAlerts();
-    heaterControlLogic();
-    printSensorLine();
+  // [USER REQUEST] Data collection + Logic ONLY when connection established
+  // [PRIORITY] Skip sensors if we are busy with WiFi provisioning/scanning
+  bool busyWithWifi = pendingWifiScan || scanResultPending || pendingWifiConnect;
+  
+  if (isSystemReady() && !busyWithWifi) {
+    if (now - lastSensorReadMs >= SENSOR_READ_INTERVAL_MS) {
+      lastSensorReadMs = now;
+      readAllSensors();
+      checkSafetyAlerts();
+      heaterControlLogic();
+      printSensorLine();
+    }
+
+    // Firebase command polling (WiFi mode)
+    if (now - lastCommandPollMs >= COMMAND_POLL_INTERVAL_MS) {
+      lastCommandPollMs = now;
+      pollFirebaseCommands();
+    }
+
+    // Firebase live + history push
+    if (now - lastFirebasePushMs >= FIREBASE_PUSH_INTERVAL_MS) {
+      lastFirebasePushMs = now;
+      pushLiveToFirebase();
+      pushHistoryToFirebase();
+      logBatchDataToFS();
+    }
+  } else {
+    // Optional: Print waiting status once in a while
+    static uint32_t lastWaitPrint = 0;
+    if (now - lastWaitPrint > 30000) {
+       lastWaitPrint = now;
+       Serial.printf("[Health] %s | WiFi: %s | BLE: %s | Uptime: %lu s\n", 
+          sessionStateStr(sessionState),
+          wifiConnected ? "ON" : "OFF",
+          bleConnected ? "CONNECTED" : "DISCONNECTED",
+          now / 1000);
+    }
   }
 
-  // BLE state notification
-  if (now - lastBleNotifyMs >= BLE_NOTIFY_INTERVAL_MS) {
+  // BLE state notification (always notify if BLE connected, even if sensors not reading yet)
+  if (bleConnected && (now - lastBleNotifyMs >= BLE_NOTIFY_INTERVAL_MS)) {
     lastBleNotifyMs = now;
     bleNotifyState();
   }
 
-  // Firebase command polling (WiFi mode)
-  if (now - lastCommandPollMs >= COMMAND_POLL_INTERVAL_MS) {
-    lastCommandPollMs = now;
-    pollFirebaseCommands();
-  }
-
-  // Firebase live + history push
-  if (now - lastFirebasePushMs >= FIREBASE_PUSH_INTERVAL_MS) {
-    lastFirebasePushMs = now;
-    pushLiveToFirebase();
-    pushHistoryToFirebase();
-
-    // Also log to LittleFS if session running
-    logBatchDataToFS();
-  }
-
   // LittleFS log sync to Firebase
-  if (now - lastLogSyncMs >= LOG_SYNC_INTERVAL_MS) {
+  if (!busyWithWifi && (now - lastLogSyncMs >= LOG_SYNC_INTERVAL_MS)) {
     lastLogSyncMs = now;
     syncLogsToFirebase();
   }

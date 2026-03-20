@@ -1,14 +1,17 @@
-import 'package:flutter/material.dart';
-import '../../../app/routes.dart';
-import '../../../app/routes.dart';
-import '../../../services/device_transport.dart';
-import 'dart:convert';
 import 'dart:async';
+import 'dart:developer' as developer;
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../../../app/routes.dart';
+import '../../../services/session_store.dart';
+import '../../../services/wifi_credential_service.dart';
 import '../../../widgets/stepper_header.dart';
 import '../../../widgets/primary_button.dart';
 import '../../../widgets/secondary_button.dart';
 import '../../../widgets/app_card.dart';
 import '../../../widgets/mode_toggle_button.dart';
+import '../../../services/ble_service.dart';
 
 class WifiSetupBleStep2Page extends StatefulWidget {
   const WifiSetupBleStep2Page({super.key});
@@ -17,72 +20,148 @@ class WifiSetupBleStep2Page extends StatefulWidget {
   State<WifiSetupBleStep2Page> createState() => _WifiSetupBleStep2PageState();
 }
 
-class BleWifiNetwork {
+class ScannedNetwork {
   final String ssid;
   final String quality;
+  final bool isSecured;
   final int rssi;
 
-  const BleWifiNetwork({
+  ScannedNetwork({
     required this.ssid,
     required this.quality,
+    required this.isSecured,
     required this.rssi,
   });
 }
 
 class _WifiSetupBleStep2PageState extends State<WifiSetupBleStep2Page> {
-  String _state = 'idle'; // idle, scanning, results
-  List<BleWifiNetwork> _networks = [];
+  String _state = 'idle'; // idle, scanning, results, connecting_saved
+  List<ScannedNetwork> _networks = [];
   String? _selectedSsid;
   bool _showHiddenEntry = false;
   final _hiddenSsidController = TextEditingController();
   bool _showScannedNetworks = false;
-  StreamSubscription? _ackSub;
+  bool _isLoadingNetworks = true;
+  StreamSubscription<Map<String, dynamic>>? _wifiSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedNetworks();
+    
+    // Subscribe to WiFi result stream
+    final bleService = context.read<BleService>();
+    _wifiSubscription = bleService.wifiResultStream.listen((data) {
+      if (!mounted) return;
+      if (data['cmd'] == 'WIFI_SCAN_RESULT') {
+        final List<dynamic> nets = data['networks'] ?? [];
+        final results = nets.map((n) {
+          String q = "Weak";
+          int rssi = n['r'] ?? -100;
+          if (rssi > -60) q = "Excellent";
+          else if (rssi > -70) q = "Good";
+          else if (rssi > -80) q = "Fair";
+          
+          return ScannedNetwork(
+            ssid: n['s'] ?? 'Unknown',
+            quality: q,
+            isSecured: n['o'] ?? true, 
+            rssi: rssi,
+          );
+        }).toList();
+        
+        setState(() {
+           _networks = results;
+           _state = 'results';
+           _showScannedNetworks = true;
+        });
+      }
+    });
+  }
+
+  Future<void> _loadSavedNetworks() async {
+    if (!mounted) return;
+    
+    // Add a race condition safety: don't let this hang the whole UI
+    
+    try {
+      final session = context.read<SessionStore>();
+      final deviceId = session.pairedDeviceId;
+      final userId = FirebaseAuth.instance.currentUser?.uid;
+      
+      if (deviceId.isNotEmpty) {
+         if (userId != null) {
+            final wifiService = WifiCredentialService();
+            // Don't await this forever
+            wifiService.fetchNetworksFromFirebase(userId).timeout(const Duration(seconds: 2)).catchError((_) => <SavedNetwork>[]);
+         }
+         await session.loadSavedNetworks(deviceId).timeout(const Duration(seconds: 2)).catchError((_) {});
+      }
+    } catch (e) {
+      developer.log("Error loading networks: $e");
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingNetworks = false;
+        });
+      }
+    }
+  }
+
+  // Replaced static connection method with routing to Step 3 (password entry)
 
   @override
   void dispose() {
     _hiddenSsidController.dispose();
-    _ackSub?.cancel();
+    _wifiSubscription?.cancel();
     super.dispose();
   }
 
   void _startScan() async {
     setState(() => _state = 'scanning');
+    final bleService = context.read<BleService>();
     
-    _ackSub?.cancel();
-    _ackSub = DeviceTransport().ble.ackStream.listen((jsonStr) {
-      try {
-        final decoded = jsonDecode(jsonStr);
-        if (decoded['cmd'] == 'SCAN_WIFI' && decoded['status'] == 'done') {
-          final nets = (decoded['networks'] as List).map((n) {
-             final rssi = n['rssi'] as int;
-             String qual = 'Weak';
-             if (rssi > -60) qual = 'Excellent';
-             else if (rssi > -70) qual = 'Good';
-             else if (rssi > -85) qual = 'Fair';
-             return BleWifiNetwork(ssid: n['ssid'], rssi: rssi, quality: qual);
-          }).toList();
-          
-          if (!mounted) return;
-          setState(() {
-            _networks = nets;
-            _state = 'results';
-            _showScannedNetworks = true;
-          });
-        } else if (decoded['cmd'] == 'SCAN_WIFI') {
-           if (!mounted) return;
-           setState(() => _state = 'idle');
-        }
-      } catch(e) {}
-    });
+    if (!bleService.isConnected) {
+      setState(() => _state = 'idle');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Device not connected via Bluetooth. Go back and reconnect.'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+      return;
+    }
 
-    DeviceTransport().sendCommand("SCAN_WIFI");
+    final sent = await bleService.sendScanWifi();
+    if (!sent) {
+      if (mounted) {
+        setState(() => _state = 'idle');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to send scan command. Check BLE connection.'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+      return;
+    }
     
-    Future.delayed(const Duration(seconds: 15), () {
+    // Timeout: firmware scan takes up to 12s, give 18s total
+    Future.delayed(const Duration(seconds: 18), () {
       if (!mounted) return;
       if (_state == 'scanning') {
          setState(() {
-           _state = _networks.isNotEmpty ? 'results' : 'idle';
+            _state = 'results';
+            _showScannedNetworks = true;
          });
+         ScaffoldMessenger.of(context).showSnackBar(
+           const SnackBar(
+             content: Text('WiFi scan timed out. Try scanning again.'),
+             backgroundColor: Colors.orange,
+           ),
+         );
       }
     });
   }
@@ -175,6 +254,21 @@ class _WifiSetupBleStep2PageState extends State<WifiSetupBleStep2Page> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        if (_isLoadingNetworks)
+                           const Center(child: CircularProgressIndicator(), heightFactor: 2)
+                        else if (context.watch<SessionStore>().fullSavedNetworks.isNotEmpty) ...[
+                           const Text(
+                             'Saved Networks',
+                             style: TextStyle(
+                               fontSize: 18,
+                               fontWeight: FontWeight.bold,
+                             ),
+                           ),
+                           const SizedBox(height: 16),
+                           ...context.watch<SessionStore>().fullSavedNetworks.map((net) => _buildSavedNetworkItem(net, isDark)),
+                           const SizedBox(height: 24),
+                        ],
+
                         const Text(
                           'Select WiFi Network',
                           style: TextStyle(
@@ -240,25 +334,42 @@ class _WifiSetupBleStep2PageState extends State<WifiSetupBleStep2Page> {
                         ],
 
                         // Network list (collapsible)
-                        if (_state == 'results' && _showScannedNetworks) ...[
+                        if ((_state == 'results' || _state == 'scanning') && _showScannedNetworks) ...[
                           AnimatedSize(
                             duration: const Duration(milliseconds: 300),
                             curve: Curves.easeInOut,
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  'Found ${_networks.length} network(s)',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: accentColor,
-                                    fontWeight: FontWeight.w500,
+                                if (_state == 'scanning' && _networks.isEmpty)
+                                  const Padding(
+                                    padding: EdgeInsets.symmetric(vertical: 20),
+                                    child: Center(child: CircularProgressIndicator()),
+                                  )
+                                else if (_state == 'results' && _networks.isEmpty)
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 20),
+                                    child: Center(
+                                      child: Text(
+                                        'No WiFi networks found.',
+                                        style: TextStyle(color: subtextColor),
+                                      ),
+                                    ),
+                                  )
+                                else ...[
+                                  Text(
+                                    'Found ${_networks.length} network(s)',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: accentColor,
+                                      fontWeight: FontWeight.w500,
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(height: 12),
-                                ..._networks.map(
-                                  (net) => _buildNetworkItem(net, isDark),
-                                ),
+                                  const SizedBox(height: 12),
+                                  ..._networks.map(
+                                    (net) => _buildNetworkItem(net, isDark),
+                                  ),
+                                ],
                               ],
                             ),
                           ),
@@ -350,7 +461,7 @@ class _WifiSetupBleStep2PageState extends State<WifiSetupBleStep2Page> {
     );
   }
 
-  Widget _buildNetworkItem(BleWifiNetwork network, bool isDark) {
+  Widget _buildNetworkItem(ScannedNetwork network, bool isDark) {
     final isSelected = _selectedSsid == network.ssid && !_showHiddenEntry;
     final accentColor = isDark
         ? const Color(0xFF00D4AA)
@@ -452,5 +563,79 @@ class _WifiSetupBleStep2PageState extends State<WifiSetupBleStep2Page> {
       default:
         return '____';
     }
+  }
+
+  Widget _buildSavedNetworkItem(SavedNetwork network, bool isDark) {
+    final accentColor = isDark ? const Color(0xFF00D4AA) : const Color(0xFF1976D2);
+    final subtextColor = isDark ? const Color(0xFF8892B0) : const Color(0xFF64748B);
+    
+    final daysAgo = DateTime.now().difference(network.lastUsed).inDays;
+    final timeStr = daysAgo == 0 ? 'Today' : (daysAgo == 1 ? 'Yesterday' : '$daysAgo days ago');
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF0D1B2A) : const Color(0xFFF5F7FA),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? const Color(0xFF1E3A5F) : const Color(0xFFE0E6ED),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.wifi, color: accentColor),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          network.ssid,
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                        ),
+                        const SizedBox(width: 6),
+                        Icon(Icons.lock, size: 14, color: subtextColor),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Last used: $timeStr',
+                      style: TextStyle(fontSize: 12, color: subtextColor),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: accentColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text('Saved', style: TextStyle(fontSize: 10, color: accentColor, fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: PrimaryButton(
+              label: 'Connect',
+              onPressed: () {
+                Navigator.of(context).pushReplacementNamed(
+                  AppRoutes.wifiStep3,
+                  arguments: network.ssid,
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
