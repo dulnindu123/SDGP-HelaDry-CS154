@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'dart:async';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import '../../../services/session_store.dart';
 import '../../../app/routes.dart';
 import '../../../app/mock_data.dart';
 import '../../../widgets/app_card.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../../backend/services/live_data_service.dart';
-import '../../../backend/services/batch_service.dart';
-import 'dart:async';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -16,23 +18,22 @@ class DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<DashboardPage> {
-  final LiveDataService _liveDataService = LiveDataService();
+  bool _checkedActive = false;
 
+  final LiveDataService _liveDataService = LiveDataService();
   double _temperature = 0.0;
   double _humidity = 0.0;
   int _airflow = 0;
   bool _isLoadingLive = true;
-
-  final BatchService _batchService = BatchService();
-  Map<String, dynamic>? _activeBatch;
-  bool _isLoadingBatch = true;
-
   static const String _deviceId = 'device-001';
 
   @override
-  void initState() {
-    super.initState();
-    try {
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Only check once per widget lifecycle
+    if (!_checkedActive) {
+      _checkedActive = true;
+      _checkAndSetActiveBatch();
       _liveDataService.listenToLiveData(_deviceId).listen((data) {
         if (mounted) {
           setState(() {
@@ -43,18 +44,34 @@ class _DashboardPageState extends State<DashboardPage> {
           });
         }
       });
-
-      _batchService.listenToActiveBatch().listen((batch) {
-        if (mounted) {
-          setState(() {
-            _activeBatch = batch;
-            _isLoadingBatch = false;
-          });
-        }
-      });
-    } catch (e) {
-      debugPrint('Error in initState: $e');
     }
+  }
+
+  Future<void> _checkAndSetActiveBatch() async {
+    final session = context.read<SessionStore>();
+    if (session.activeBatch != null) return;
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      final token = await user?.getIdToken();
+      final response = await http.get(
+        Uri.parse('http://10.0.2.2:5000/session/my-sessions'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final List sessions = data['data'] ?? [];
+        final active = sessions.firstWhere(
+          (s) => (s['status'] ?? '') == 'active',
+          orElse: () => null,
+        );
+        if (active != null) {
+          session.setActiveBatch(Map<String, dynamic>.from(active));
+        }
+      }
+    } catch (_) {}
   }
 
   @override
@@ -65,6 +82,14 @@ class _DashboardPageState extends State<DashboardPage> {
     final subtextColor = isDark
         ? const Color(0xFF8892B0)
         : const Color(0xFF64748B);
+    final now = DateTime.now();
+    final hour = now.hour == 0
+        ? 12
+        : (now.hour > 12 ? now.hour - 12 : now.hour);
+    final minute = now.minute.toString().padLeft(2, '0');
+    final amPm = now.hour >= 12 ? 'PM' : 'AM';
+    final syncDateStr =
+        '${now.month}/${now.day}/${now.year} $hour:$minute $amPm';
 
     return Scaffold(
       body: SingleChildScrollView(
@@ -134,14 +159,6 @@ class _DashboardPageState extends State<DashboardPage> {
                         children: [
                           IconButton(
                             icon: const Icon(
-                              Icons.calendar_today,
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                            onPressed: () {},
-                          ),
-                          IconButton(
-                            icon: const Icon(
                               Icons.settings,
                               color: Colors.white,
                               size: 20,
@@ -196,7 +213,7 @@ class _DashboardPageState extends State<DashboardPage> {
                               ),
                             ),
                             Text(
-                              MockData.lastSyncDate,
+                              syncDateStr,
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 13,
@@ -242,191 +259,100 @@ class _DashboardPageState extends State<DashboardPage> {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: AppCard(
                 padding: const EdgeInsets.all(20),
-                child: Column(
-                  children: [
-                    Text(
-                      'Active Drying Batch',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: isDark
-                            ? const Color(0xFFE6F1FF)
-                            : const Color(0xFF1A2D4D),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    if (_isLoadingBatch)
-                      const CircularProgressIndicator()
-                    else if (_activeBatch != null) ...[
-                      Row(
+                child: session.activeBatch == null
+                    ? Column(
                         children: [
-                          Container(
-                            width: 10,
-                            height: 10,
-                            decoration: const BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Color(0xFF4CAF50),
+                          Text(
+                            'Active Drying Batch',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: isDark
+                                  ? const Color(0xFFE6F1FF)
+                                  : const Color(0xFF1A2D4D),
                             ),
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(height: 16),
+                          Icon(
+                            Icons.wb_sunny_outlined,
+                            size: 48,
+                            color: subtextColor.withOpacity(0.5),
+                          ),
+                          const SizedBox(height: 12),
                           Text(
-                            'Active',
+                            'No active drying batch',
+                            style: TextStyle(fontSize: 16, color: subtextColor),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Start a new batch to begin tracking',
                             style: TextStyle(
                               fontSize: 13,
-                              color: const Color(0xFF4CAF50),
-                              fontWeight: FontWeight.w600,
+                              color: subtextColor.withOpacity(0.7),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                Navigator.of(
+                                  context,
+                                ).pushNamed(AppRoutes.cropGuide);
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: isDark
+                                    ? const Color(0xFF1A3A0A)
+                                    : const Color(0xFF5B8C2E),
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 24,
+                                  vertical: 12,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              child: const Text(
+                                'Drying Guide',
+                                style: TextStyle(fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            child: ElevatedButton(
+                              onPressed: () {
+                                Navigator.of(
+                                  context,
+                                ).pushNamed(AppRoutes.startNewBatch);
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: isDark
+                                    ? const Color(0xFF1A2D4D)
+                                    : const Color(0xFF1976D2),
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 24,
+                                  vertical: 12,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              child: const Text(
+                                'Start New Batch',
+                                style: TextStyle(fontWeight: FontWeight.w600),
+                              ),
                             ),
                           ),
                         ],
+                      )
+                    : _ActiveBatchTimerCard(
+                        batch: session.activeBatch!,
+                        isDark: isDark,
+                        subtextColor: subtextColor,
                       ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Crop',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: subtextColor,
-                                    ),
-                                  ),
-                                  Text(
-                                    '${_activeBatch!['crop']}',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: isDark
-                                          ? const Color(0xFFE6F1FF)
-                                          : const Color(0xFF1A2D4D),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Text(
-                                    'Weight',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: subtextColor,
-                                    ),
-                                  ),
-                                  Text(
-                                    '${_activeBatch!['weight']} kg',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: isDark
-                                          ? const Color(0xFFE6F1FF)
-                                          : const Color(0xFF1A2D4D),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: () async {
-                            try {
-                              await _batchService.stopBatch(
-                                _activeBatch!['sessionId'],
-                              );
-                              if (!mounted) return;
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    'Batch stopped successfully! ✅',
-                                  ),
-                                  behavior: SnackBarBehavior.floating,
-                                  backgroundColor: Color(0xFF4CAF50),
-                                ),
-                              );
-                            } catch (e) {
-                              if (!mounted) return;
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Failed to stop batch: $e'),
-                                  behavior: SnackBarBehavior.floating,
-                                  backgroundColor: Colors.red,
-                                ),
-                              );
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 24,
-                              vertical: 12,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          child: const Text(
-                            'Stop Batch',
-                            style: TextStyle(fontWeight: FontWeight.w600),
-                          ),
-                        ),
-                      ),
-                    ] else ...[
-                      Icon(
-                        Icons.wb_sunny_outlined,
-                        size: 48,
-                        color: subtextColor.withOpacity(0.5),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'No active drying batch',
-                        style: TextStyle(fontSize: 16, color: subtextColor),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Start a new batch to begin tracking',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: subtextColor.withOpacity(0.7),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: () {
-                          Navigator.of(
-                            context,
-                          ).pushNamed(AppRoutes.startNewBatch);
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: isDark
-                              ? const Color(0xFF1A2D4D)
-                              : const Color(0xFF1976D2),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24,
-                            vertical: 12,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        child: const Text(
-                          'Start New Batch',
-                          style: TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
               ),
             ),
 
@@ -462,7 +388,10 @@ class _DashboardPageState extends State<DashboardPage> {
                           'Temperature',
                           _isLoadingLive
                               ? '--'
-                              : '${_temperature.toStringAsFixed(1)}°C',
+                              : (session.useCelsius
+                                    ? '${_temperature.toStringAsFixed(1)}°C'
+                                    : '${(_temperature * 9 / 5 + 32).toStringAsFixed(1)}°F'),
+
                           const Color(0xFFEF5350),
                           isDark,
                         ),
@@ -765,20 +694,25 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 }
 
+// --- Timer widget for active batch ---
+
 class _ActiveBatchTimerCard extends StatefulWidget {
   final Map<String, dynamic> batch;
   final bool isDark;
   final Color subtextColor;
   const _ActiveBatchTimerCard({
-    required this.batch;
+    required this.batch,
     required this.isDark,
-    required this.subtextColor
+    required this.subtextColor,
   });
-@override
+
+  @override
   State<_ActiveBatchTimerCard> createState() => _ActiveBatchTimerCardState();
 }
 
 class _ActiveBatchTimerCardState extends State<_ActiveBatchTimerCard> {
+  late int _durationHours;
+  late DateTime _startTime;
   late DateTime _endTime;
   Duration _remaining = Duration.zero;
   Timer? _timer;
@@ -791,12 +725,14 @@ class _ActiveBatchTimerCardState extends State<_ActiveBatchTimerCard> {
   }
 
   void _initTimer() {
-    final durationHours = (widget.batch['durationEstimate'] is int)
-        ? widget.batch['durationEstimate'] as int
-        : int.tryParse(widget.batch['durationEstimate'].toString()) ?? 0;
-    final startTime = widget.batch['startTime'] as int;
-    final start = DateTime.fromMillisecondsSinceEpoch(startTime);
-    _endTime = start.add(Duration(hours: durationHours));
+    _durationHours = (widget.batch["duration"] is int)
+        ? widget.batch["duration"] as int
+        : int.tryParse(widget.batch["duration"].toString()) ?? 0;
+    // Use start_date or start_time, fallback to now if missing
+    final rawStart =
+        widget.batch["start_date"] ?? widget.batch["start_time"] ?? "";
+    _startTime = DateTime.tryParse(rawStart) ?? DateTime.now();
+    _endTime = _startTime.add(Duration(hours: _durationHours));
     _remaining = _endTime.difference(DateTime.now());
     if (_remaining.isNegative) _remaining = Duration.zero;
   }
@@ -807,7 +743,6 @@ class _ActiveBatchTimerCardState extends State<_ActiveBatchTimerCard> {
       if (_remaining.isNegative) _remaining = Duration.zero;
     });
   }
-  
 
   @override
   void dispose() {
@@ -827,6 +762,7 @@ class _ActiveBatchTimerCardState extends State<_ActiveBatchTimerCard> {
     final batch = widget.batch;
     final isDark = widget.isDark;
     final subtextColor = widget.subtextColor;
+    final session = context.watch<SessionStore>();
 
     return Column(
       children: [
@@ -840,7 +776,7 @@ class _ActiveBatchTimerCardState extends State<_ActiveBatchTimerCard> {
         ),
         const SizedBox(height: 16),
         Text(
-          '${batch['crop']}',
+          '${batch["crop_emoji"] ?? ""}  ${batch["batch_name"] ?? batch["crop_name"] ?? ""}',
           style: TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.bold,
@@ -854,17 +790,48 @@ class _ActiveBatchTimerCardState extends State<_ActiveBatchTimerCard> {
             Icon(Icons.scale, size: 18, color: subtextColor),
             const SizedBox(width: 4),
             Text(
-              '${batch['weight']} kg',
+              '${batch["weight_kg"] ?? "-"} kg',
               style: TextStyle(fontSize: 15, color: subtextColor),
             ),
             const SizedBox(width: 16),
-            Icon(Icons.thermostat, size: 18, color: subtextColor),
+            Icon(Icons.layers, size: 18, color: subtextColor),
             const SizedBox(width: 4),
             Text(
-              '${batch['targetTemp']}°C',
+              '${batch["trays"] ?? "-"} trays',
               style: TextStyle(fontSize: 15, color: subtextColor),
             ),
           ],
+        ),
+        const SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.thermostat, size: 18, color: subtextColor),
+            const SizedBox(width: 4),
+            Text(
+              batch["temperature"] == null
+                  ? "-"
+                  : session.useCelsius
+                  ? '${batch["temperature"]}°C'
+                  : '${((batch["temperature"] is num ? batch["temperature"].toDouble() : double.tryParse(batch["temperature"].toString()) ?? 0.0) * 9 / 5 + 32).round()}°F',
+              style: TextStyle(fontSize: 15, color: subtextColor),
+            ),
+            const SizedBox(width: 16),
+            Icon(Icons.timer, size: 18, color: subtextColor),
+            const SizedBox(width: 4),
+            Text(
+              '${batch["duration"] ?? "-"} h',
+              style: TextStyle(fontSize: 15, color: subtextColor),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Started: ' +
+              (batch["start_date"] != null
+                  ? (batch["start_date"] as String).split('T')[0]
+                  : '-'),
+          style: TextStyle(fontSize: 13, color: subtextColor.withOpacity(0.8)),
         ),
         const SizedBox(height: 12),
         Row(
@@ -879,54 +846,103 @@ class _ActiveBatchTimerCardState extends State<_ActiveBatchTimerCard> {
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: _remaining > Duration.zero
-                    ? Colors.amber
-                    : Colors.green,
+                color: _remaining > Duration.zero ? Colors.amber : Colors.green,
               ),
             ),
           ],
         ),
         const SizedBox(height: 12),
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: () async {
-              try {
-                // Will be replaced with backend API call later
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Stop batch coming soon!'),
-                    behavior: SnackBarBehavior.floating,
+        Row(
+          children: [
+            Expanded(
+              child: ElevatedButton(
+                onPressed: null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: isDark
+                      ? const Color(0xFF1A2D4D)
+                      : const Color(0xFF1976D2),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
                   ),
-                );
-              } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Error: $e')),
-                );
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24,
-                vertical: 12,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: Text(
+                  _remaining > Duration.zero
+                      ? 'Batch Running'
+                      : 'Batch Complete',
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
               ),
             ),
-            child: const Text(
-              'Stop Batch',
-              style: TextStyle(fontWeight: FontWeight.w600),
+            const SizedBox(width: 12),
+            Expanded(
+              child: ElevatedButton(
+                onPressed: _remaining > Duration.zero ? _handleStopBatch : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: const Text(
+                  'Stop',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ),
             ),
-          ),
+          ],
         ),
       ],
     );
   }
-}
 
-
-
+  Future<void> _handleStopBatch() async {
+    final session = Provider.of<SessionStore>(context, listen: false);
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      final token = await user?.getIdToken();
+      final deviceId = widget.batch["device_id"];
+      final response = await http.post(
+        Uri.parse('http://10.0.2.2:5000/device/stop'),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: jsonEncode({"device_id": deviceId}),
+      );
+      if (!mounted) return;
+      Navigator.pop(context); // Close loader
+      if (response.statusCode == 200) {
+        session.setActiveBatch(null);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Drying Stopped'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      } else {
+        throw Exception("Failed to stop device");
+      }
+    } catch (e) {
+      if (!mounted) return;
+      if (Navigator.canPop(context)) Navigator.pop(context);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Stop Error: ${e.toString()}')));
+    }
+  }
 }
