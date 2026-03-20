@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import '../../../app/mock_data.dart';
 import '../../../widgets/primary_button.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_database/firebase_database.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class StartNewBatchPage extends StatefulWidget {
   const StartNewBatchPage({super.key});
@@ -70,44 +71,53 @@ class _StartNewBatchPageState extends State<StartNewBatchPage> {
     }
 
     setState(() => _isLoading = true);
+
     try {
       final user = FirebaseAuth.instance.currentUser;
-      if (user == null) throw Exception('No logged in user found');
+      if (user == null) throw Exception('No logged-in user found.');
 
-      final db = FirebaseDatabase.instance;
-      final sessionRef = db.ref('users/${user.uid}/sessions').push();
-
+      final token = await user.getIdToken();
       final crop = MockData.crops[_selectedCropIndex];
 
-      await sessionRef.set({
-        'sessionId': sessionRef.key,
-        'deviceId': 'device-001',
-        'crop': crop.name,
-        'variety': _varietyController.text.trim(),
-        'weight': double.tryParse(_weightController.text.trim()) ?? 0.0,
-        'trays': int.tryParse(_traysController.text.trim()) ?? 0,
-        'moistureTarget': _moistureController.text.trim(),
-        'notes': _notesController.text.trim(),
-        'targetTemp': _targetTemp,
-        'durationEstimate': _durationController.text.trim(),
-        'maxTempCutoff':
-            double.tryParse(_maxTempController.text.trim()) ?? 75.0,
-        'lowBatteryCutoff':
-            double.tryParse(_lowBatteryController.text.trim()) ?? 11.5,
-        'mode': _isAutoMode ? 'auto' : 'manual',
-        'status': 'active',
-        'startTime': ServerValue.timestamp,
-      });
+      final response = await http.post(
+        Uri.parse('http://10.0.2.2:5000/device/start'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'device_id': 'device-001',
+          'temperature': _targetTemp,
+          'crop_name': crop.name,
+          'crop_emoji': crop.emoji,
+          'variety': _varietyController.text.trim(),
+          'weight_kg': double.tryParse(_weightController.text.trim()) ?? 0.0,
+          'trays': int.tryParse(_traysController.text.trim()) ?? 0,
+          'moisture_target': _moistureController.text.trim(),
+          'notes': _notesController.text.trim(),
+          'duration': int.tryParse(_durationController.text.trim()) ?? 0,
+          'max_temp_cutoff':
+              double.tryParse(_maxTempController.text.trim()) ?? 75.0,
+          'low_battery_cutoff':
+              double.tryParse(_lowBatteryController.text.trim()) ?? 11.5,
+          'mode': _isAutoMode ? 'auto' : 'manual',
+        }),
+      );
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Batch started successfully'),
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: Color(0xFF4CAF50),
-        ),
-      );
-      Navigator.of(context).pop();
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Batch started successfully! ✅'),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Color(0xFF4CAF50),
+          ),
+        );
+        Navigator.of(context).pop();
+      } else {
+        throw Exception('Server error: ${response.statusCode}');
+      }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
