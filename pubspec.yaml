@@ -15,14 +15,14 @@ dependencies:
   google_fonts: ^6.2.1
   firebase_core: ^4.5.0
   firebase_auth: ^6.2.0
-<<<<<<< HEAD
   http: ^1.6.0
   firebase_database: ^12.1.4
+  image_picker: ^1.2.1
+  firebase_storage: ^13.1.0
   flutter_reactive_ble: ^5.3.1
   permission_handler: ^11.3.1
-=======
-  firebase_database: ^12.1.4
->>>>>>> sensor-dashboard
+  
+ sensor-dashboard
 
 dev_dependencies:
   flutter_test:

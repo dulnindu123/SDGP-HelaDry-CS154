@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../../app/routes.dart';
 import '../../../app/mock_data.dart';
 import '../../../widgets/primary_button.dart';
+import 'package:provider/provider.dart';
+import '../../../services/session_store.dart';
 
 class CropGuidePage extends StatefulWidget {
   const CropGuidePage({super.key});
@@ -23,6 +25,7 @@ class _CropGuidePageState extends State<CropGuidePage> {
         ? const Color(0xFF00D4AA)
         : const Color(0xFF1976D2);
     final selectedCrop = MockData.crops[_selectedCropIndex];
+    final session = context.watch<SessionStore>();
 
     return Scaffold(
       body: Column(
@@ -185,7 +188,9 @@ class _CropGuidePageState extends State<CropGuidePage> {
                                       ),
                                       const SizedBox(width: 4),
                                       Text(
-                                        '${selectedCrop.tempC.toStringAsFixed(0)}°C',
+                                        session.useCelsius
+                                            ? '${selectedCrop.tempC.toStringAsFixed(0)}°C'
+                                            : '${((selectedCrop.tempC * 9 / 5) + 32).round()}°F',
                                         style: TextStyle(
                                           fontSize: 13,
                                           color: accentColor,

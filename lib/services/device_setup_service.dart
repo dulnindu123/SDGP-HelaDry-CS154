@@ -4,17 +4,17 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 class DeviceSetupService {
   //  Flask server IP
-  static const String baseUrl = 'http://10.0.2.2:5000';
+  static const String baseUrl = 'http://192.168.1.101:5000/';
 
   static Future<void> registerDeviceWithBackend(String receivedIdFromBluetooth) async {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) return;
 
-      final token = await user.getIdToken();
+      final token = await user.getIdToken(true);
 
       final response = await http.post(
-        Uri.parse('$baseUrl/device/register'),
+        Uri.parse('${baseUrl}device/register'),
         headers: {
           "Content-Type": "application/json",
           "Authorization": "Bearer $token",

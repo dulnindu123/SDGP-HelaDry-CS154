@@ -1,10 +1,49 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:async';
+import 'firebase_service.dart';
 
 // Active Drying Batch
 class SessionStore extends ChangeNotifier {
+  SharedPreferences? _prefs;
+
+  SessionStore() {
+    _initPrefs();
+  }
+
+  Future<void> _initPrefs() async {
+    _prefs = await SharedPreferences.getInstance();
+    _loadSettings();
+  }
+
+  void _loadSettings() {
+    if (_prefs == null) return;
+    _useCelsius = _prefs!.getBool('useCelsius') ?? true;
+    _tempOffset = _prefs!.getDouble('tempOffset') ?? 0.0;
+    _humidityOffset = _prefs!.getDouble('humidityOffset') ?? 0.0;
+    _overTempAlert = _prefs!.getBool('overTempAlert') ?? true;
+    _lowBatteryAlert = _prefs!.getBool('lowBatteryAlert') ?? true;
+    _sensorFaultAlert = _prefs!.getBool('sensorFaultAlert') ?? true;
+    // We only load user profile if not empty in prefs
+    _userName = _prefs!.getString('userName') ?? _userName;
+    _userEmail = _prefs!.getString('userEmail') ?? _userEmail;
+    notifyListeners();
+  }
+
   Map<String, dynamic>? _activeBatch;
+  Map<String, dynamic> _liveMetrics = {
+    'temperature': 0.0,
+    'humidity': 0.0,
+    'fanSpeed': 0,
+    'heaterStatus': 'OFF',
+    'battery': 0.0,
+    'solarStatus': 'N/A',
+  };
+  StreamSubscription? _metricsSubscription;
 
   Map<String, dynamic>? get activeBatch => _activeBatch;
+  Map<String, dynamic> get liveMetrics => _liveMetrics;
+
   void setActiveBatch(Map<String, dynamic>? batch) {
     _activeBatch = batch;
     notifyListeners();
@@ -65,6 +104,11 @@ class SessionStore extends ChangeNotifier {
     _isLoggedIn = true;
     _userName = name.isNotEmpty ? name : 'User';
     _userEmail = email.isNotEmpty ? email : 'user@example.com';
+
+    // Persist to SharedPreferences so the name survives app restarts
+    _prefs?.setString('userName', _userName);
+    _prefs?.setString('userEmail', _userEmail);
+
     notifyListeners();
   }
 
@@ -81,6 +125,13 @@ class SessionStore extends ChangeNotifier {
     _fanSpeed = 50;
     _heaterOn = false;
     _targetTemp = 55;
+
+    // Clear persisted user data so a new login doesn't see stale values
+    _prefs?.remove('userName');
+    _prefs?.remove('userEmail');
+
+    stopListeningToMetrics();
+
     notifyListeners();
   }
 
@@ -94,7 +145,26 @@ class SessionStore extends ChangeNotifier {
     _pairedDeviceId = id;
     _pairedDeviceName = name;
     print("SessionStore: Linked Device ID - $_pairedDeviceId");
+    
+    // Start listening to metrics when a device is paired
+    startListeningToMetrics(id);
+    
     notifyListeners();
+  }
+
+  void startListeningToMetrics(String deviceId) {
+    stopListeningToMetrics();
+    _metricsSubscription = FirebaseService().listenToLiveMetrics(deviceId).listen((metrics) {
+      if (metrics.isNotEmpty) {
+        _liveMetrics = metrics;
+        notifyListeners();
+      }
+    });
+  }
+
+  void stopListeningToMetrics() {
+    _metricsSubscription?.cancel();
+    _metricsSubscription = null;
   }
 
   // WiFi
@@ -141,42 +211,50 @@ class SessionStore extends ChangeNotifier {
   // Settings
   void setUseCelsius(bool celsius) {
     _useCelsius = celsius;
+    _prefs?.setBool('useCelsius', celsius);
     notifyListeners();
   }
 
   void setTempOffset(double offset) {
     _tempOffset = offset;
+    _prefs?.setDouble('tempOffset', offset);
     notifyListeners();
   }
 
   void setHumidityOffset(double offset) {
     _humidityOffset = offset;
+    _prefs?.setDouble('humidityOffset', offset);
     notifyListeners();
   }
 
   void setOverTempAlert(bool val) {
     _overTempAlert = val;
+    _prefs?.setBool('overTempAlert', val);
     notifyListeners();
   }
 
   void setLowBatteryAlert(bool val) {
     _lowBatteryAlert = val;
+    _prefs?.setBool('lowBatteryAlert', val);
     notifyListeners();
   }
 
   void setSensorFaultAlert(bool val) {
     _sensorFaultAlert = val;
+    _prefs?.setBool('sensorFaultAlert', val);
     notifyListeners();
   }
 
   // Profile
   void setUserName(String name) {
     _userName = name;
+    _prefs?.setString('userName', name);
     notifyListeners();
   }
 
   void setUserEmail(String email) {
     _userEmail = email;
+    _prefs?.setString('userEmail', email);
     notifyListeners();
   }
 }

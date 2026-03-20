@@ -12,6 +12,8 @@ class AppTextField extends StatelessWidget {
   final ValueChanged<String>? onChanged;
   final Widget? suffixIcon;
 
+  final bool readOnly;
+
   const AppTextField({
     super.key,
     required this.label,
@@ -24,6 +26,7 @@ class AppTextField extends StatelessWidget {
     this.validator,
     this.onChanged,
     this.suffixIcon,
+    this.readOnly = false,
   });
 
   @override
@@ -44,6 +47,7 @@ class AppTextField extends StatelessWidget {
           keyboardType: keyboardType,
           validator: validator,
           onChanged: onChanged,
+          readOnly: readOnly,
           decoration: InputDecoration(
             hintText: hint,
             suffixIcon:

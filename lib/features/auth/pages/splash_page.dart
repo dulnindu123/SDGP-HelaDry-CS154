@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../../services/session_store.dart';
 import '../../../app/routes.dart';
 
@@ -40,8 +41,17 @@ class _SplashPageState extends State<SplashPage>
   Future<void> _navigate() async {
     await Future.delayed(const Duration(milliseconds: 2200));
     if (!mounted) return;
-    final session = context.read<SessionStore>();
-    if (session.isLoggedIn) {
+    
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final session = context.read<SessionStore>();
+      final currentName = (user.displayName != null && user.displayName!.isNotEmpty) 
+          ? user.displayName! 
+          : session.userName;
+      final currentEmail = (user.email != null && user.email!.isNotEmpty) 
+          ? user.email! 
+          : session.userEmail;
+      session.login(name: currentName, email: currentEmail);
       Navigator.of(context).pushReplacementNamed(AppRoutes.connectionMode);
     } else {
       Navigator.of(context).pushReplacementNamed(AppRoutes.login);

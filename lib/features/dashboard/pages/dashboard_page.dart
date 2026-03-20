@@ -26,6 +26,12 @@ class _DashboardPageState extends State<DashboardPage> {
     if (!_checkedActive) {
       _checkedActive = true;
       _checkAndSetActiveBatch();
+      
+      // Also ensure we are listening to metrics if a device is paired
+      final session = context.read<SessionStore>();
+      if (session.pairedDeviceId.isNotEmpty) {
+        session.startListeningToMetrics(session.pairedDeviceId);
+      }
     }
   }
 
@@ -36,7 +42,7 @@ class _DashboardPageState extends State<DashboardPage> {
       final user = FirebaseAuth.instance.currentUser;
       final token = await user?.getIdToken();
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:5000/session/my-sessions'),
+        Uri.parse('http://192.168.1.101:5000/session/my-sessions'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -60,7 +66,7 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final session = context.watch<SessionStore>();
-    final metrics = MockData.liveMetrics;
+    final metrics = session.liveMetrics;
     final subtextColor = isDark
         ? const Color(0xFF8892B0)
         : const Color(0xFF64748B);

@@ -42,7 +42,7 @@ class _MyRecordsPageState extends State<MyRecordsPage> {
       final user = FirebaseAuth.instance.currentUser;
       final token = await user?.getIdToken();
       final response = await http.get(
-        Uri.parse('http://172.30.161.140:5000/session/my-sessions'),
+        Uri.parse('http://192.168.1.101:5000/session/my-sessions'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
