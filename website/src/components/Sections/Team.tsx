@@ -14,7 +14,7 @@ export default function Team() {
     },
     {
       name: "Wethum Kiriwattuduwa",
-      role: "BackendDeveloper",
+      role: "Backend Developer",
       image: "TeamAssets/Wethum.jpeg",
     },
     {
@@ -34,12 +34,12 @@ export default function Team() {
     },
     {
       name: "Seyed Aman Zahir",
-      role: " Backend Developer",
+      role: "Backend Developer",
       image: "TeamAssets/Aman.jpeg",
     },
     {
       name: "Lorshan Harith Ravichandran",
-      role: " Web Developer and QA",
+      role: "Web Developer and QA",
       image: "TeamAssets/Lorshan.jpeg",
     },
   ];
