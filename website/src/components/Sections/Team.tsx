@@ -9,7 +9,7 @@ export default function Team() {
   const team = [
     {
       name: "Dulnindu Saranga",
-      role: "Lead Engineer and Firmware Developer",
+      role: "Lead Engineer, Firmware Developer and Web Developer",
       image: "TeamAssets/Dulnindu.jpeg",
     },
     {
@@ -24,7 +24,7 @@ export default function Team() {
     },
     {
       name: "Drian Logaeswaran",
-      role: "Developer and QA",
+      role: "Web Developer and QA",
       image: "TeamAssets/Drian.jpeg",
     },
     {
