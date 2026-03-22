@@ -10,37 +10,37 @@ export default function Team() {
     {
       name: "W.k.Dulnidu Saranga",
       role: "Lead Engineer and Firmware Developer",
-      image: "https://picsum.photos/seed/team1/600/800",
+      image: "assets/Dulnindu.jpeg",
     },
     {
       name: "K.D.W.K.Kiriwattuduwa",
       role: "Sustainability Director",
-      image: "https://picsum.photos/seed/team2/600/800",
+      image: "assets/Wethum.jpeg",
     },
     {
       name: "B.M.Asjath Ahamed",
       role: "Frontend Developer",
-      image: "https://picsum.photos/seed/team3/600/800",
+      image: "assets/Asjath.jpeg",
     },
     {
       name: "Drian Logaeswaran",
       role: "Developer and Data Analyst",
-      image: "https://picsum.photos/seed/team3/600/800",
+      image: "assets/Drain.jpeg",
     },
     {
       name: "Kabilesh K",
       role: "Frontend Developer",
-      image: "https://picsum.photos/seed/team3/600/800",
+      image: "assets/logo.png",
     },
     {
       name: "Seyed Aman Zahir",
       role: "Web application Developer and Backend Developer",
-      image: "https://picsum.photos/seed/team3/600/800",
+      image: "assets/Aman.jpeg",
     },
     {
       name: "Lorshan Harith Ravichandran",
       role: " Developer and Data Analyst",
-      image: "https://picsum.photos/seed/team3/600/800",
+      image: "assets/Lorshan.jpeg",
     },
   ];
 

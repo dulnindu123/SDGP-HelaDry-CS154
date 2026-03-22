@@ -72,7 +72,7 @@ export default function Technology() {
           >
             <div className="aspect-square rounded-[3rem] overflow-hidden shadow-2xl relative z-10">
               <img 
-                src="https://picsum.photos/seed/heladry-tech/1200/1200" 
+                src="assets/Cover.png" 
                 alt="Solar Technology" 
                 className="w-full h-full object-cover"
                 referrerPolicy="no-referrer"
