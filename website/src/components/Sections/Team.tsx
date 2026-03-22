@@ -8,38 +8,38 @@ import { motion } from 'motion/react';
 export default function Team() {
   const team = [
     {
-      name: "W.k.Dulnindu Saranga",
+      name: "Dulnindu Saranga",
       role: "Lead Engineer and Firmware Developer",
       image: "TeamAssets/Dulnindu.jpeg",
     },
     {
-      name: "K.D.W.K.Kiriwattuduwa",
-      role: "Sustainability Director",
+      name: "Wethum Kiriwattuduwa",
+      role: "BackendDeveloper",
       image: "TeamAssets/Wethum.jpeg",
     },
     {
-      name: "B.M.Asjath Ahamed",
+      name: "Asjath Ahamed",
       role: "Frontend Developer",
       image: "TeamAssets/Asjath.jpeg",
     },
     {
       name: "Drian Logaeswaran",
-      role: "Developer and Data Analyst",
+      role: "Developer and QA",
       image: "TeamAssets/Drian.jpeg",
     },
     {
       name: "Kabilesh K",
-      role: "Frontend Developer",
+      role: "Frontend Developer and QA",
       image: "TeamAssets/logo.png",
     },
     {
       name: "Seyed Aman Zahir",
-      role: "Web application Developer and Backend Developer",
+      role: " Backend Developer",
       image: "TeamAssets/Aman.jpeg",
     },
     {
       name: "Lorshan Harith Ravichandran",
-      role: " Developer and Data Analyst",
+      role: " Web Developer and QA",
       image: "TeamAssets/Lorshan.jpeg",
     },
   ];
