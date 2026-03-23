@@ -29,3 +29,10 @@ android/local.properties
 # Mac / Windows system files
 .DS_Store
 Thumbs.db
+
+dart_tool/
+.flutter-plugins-dependencies
+pubspec.lock
+macos/Flutter/GeneratedPluginRegistrant.swift
+windows/flutter/generated_plugin_registrant.cc
+windows/flutter/generated_plugins.cmake
