@@ -1,0 +1,32 @@
+Analyzing working online mode...                                
+
+   info - Don't use 'BuildContext's across async gaps - lib\features\dashboard\pages\dashboard_page.dart:46:19 - use_build_context_synchronously
+   info - Missing type annotation - lib\features\pair\pages\pair_device_page.dart:49:31 - strict_top_level_inference
+   info - Don't use 'BuildContext's across async gaps - lib\features\pair\pages\pair_device_page.dart:70:25 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\pair\pages\pair_device_page.dart:98:29 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\pair\pages\pair_device_page.dart:110:9 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\pair\pages\pair_device_page.dart:112:22 - use_build_context_synchronously
+   info - Missing type annotation - lib\features\pair\pages\pair_device_page.dart:292:33 - strict_top_level_inference
+   info - Statements in an if should be enclosed in a block - lib\features\pair\pages\pair_device_page.dart:299:35 - curly_braces_in_flow_control_structures
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\features\settings\pages\settings_page.dart:412:23 - use_build_context_synchronously
+   info - 'localName' is deprecated and shouldn't be used. use advName instead - lib\features\wifi\pages\wifi_setup_ble_step1_page.dart:52:41 - deprecated_member_use
+   info - 'localName' is deprecated and shouldn't be used. use advName instead - lib\features\wifi\pages\wifi_setup_ble_step1_page.dart:247:63 - deprecated_member_use
+   info - Statements in an if should be enclosed in a block - lib\features\wifi\pages\wifi_setup_ble_step2_page.dart:63:13 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\wifi\pages\wifi_setup_ble_step2_page.dart:64:32 - curly_braces_in_flow_control_structures
+   info - Don't use 'BuildContext's across async gaps - lib\features\wifi\pages\wifi_setup_ble_step3_page.dart:173:27 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\wifi\pages\wifi_setup_ble_step3_page.dart:177:29 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\wifi\pages\wifi_setup_ble_step3_page.dart:195:41 - use_build_context_synchronously
+   info - The constant name 'SERVICE_UUID' isn't a lowerCamelCase identifier - lib\services\ble_service.dart:58:23 - constant_identifier_names
+   info - The constant name 'CHAR_STATE_UUID' isn't a lowerCamelCase identifier - lib\services\ble_service.dart:59:23 - constant_identifier_names
+   info - The constant name 'CHAR_CMD_UUID' isn't a lowerCamelCase identifier - lib\services\ble_service.dart:60:23 - constant_identifier_names
+   info - The constant name 'CHAR_ACK_UUID' isn't a lowerCamelCase identifier - lib\services\ble_service.dart:61:23 - constant_identifier_names
+   info - 'localName' is deprecated and shouldn't be used. use advName instead - lib\services\ble_service.dart:93:37 - deprecated_member_use
+   info - Empty catch block - lib\services\ble_service.dart:213:27 - empty_catches
+   info - Statements in an if should be enclosed in a block - lib\services\connection_controller.dart:82:44 - curly_braces_in_flow_control_structures
+warning - Unused import: 'package:flutter/foundation.dart' - lib\services\device_setup_service.dart:3:8 - unused_import
+   info - Don't invoke 'print' in production code - lib\services\device_setup_service.dart:30:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\device_setup_service.dart:33:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\device_setup_service.dart:36:7 - avoid_print
+   info - Empty catch block - lib\services\firebase_service.dart:169:16 - empty_catches
+   info - Don't invoke 'print' in production code - lib\services\wifi_credential_service.dart:125:7 - avoid_print
+

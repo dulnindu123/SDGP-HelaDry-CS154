@@ -1,0 +1,267 @@
+Analyzing working online mode...                                
+
+warning - The URI 'package:flutter_lints/flutter.yaml' included in 'D:\SDGP\online only\working online mode\analysis_options.yaml' can't be found when analyzing 'D:\SDGP\online only\working online mode' - analysis_options.yaml:10:10 - include_file_not_found
+  error - Target of URI doesn't exist: 'package:provider/provider.dart' - lib\app\app.dart:2:8 - uri_does_not_exist
+  error - The method 'watch' isn't defined for the type 'BuildContext' - lib\app\app.dart:36:37 - undefined_method
+  error - Target of URI doesn't exist: 'package:provider/provider.dart' - lib\features\auth\pages\create_account_page.dart:2:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: 'package:firebase_auth/firebase_auth.dart' - lib\features\auth\pages\create_account_page.dart:3:8 - uri_does_not_exist
+  error - Undefined class 'UserCredential' - lib\features\auth\pages\create_account_page.dart:44:13 - undefined_class
+  error - Undefined name 'FirebaseAuth' - lib\features\auth\pages\create_account_page.dart:44:51 - undefined_identifier
+  error - The method 'read' isn't defined for the type 'BuildContext' - lib\features\auth\pages\create_account_page.dart:56:31 - undefined_method
+  error - The name 'FirebaseAuthException' isn't a type and can't be used in an on-catch clause - lib\features\auth\pages\create_account_page.dart:65:10 - non_type_in_catch_clause
+  error - Target of URI doesn't exist: 'package:provider/provider.dart' - lib\features\auth\pages\login_page.dart:2:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: 'package:firebase_auth/firebase_auth.dart' - lib\features\auth\pages\login_page.dart:3:8 - uri_does_not_exist
+  error - Undefined class 'UserCredential' - lib\features\auth\pages\login_page.dart:40:13 - undefined_class
+  error - Undefined name 'FirebaseAuth' - lib\features\auth\pages\login_page.dart:40:51 - undefined_identifier
+  error - The method 'read' isn't defined for the type 'BuildContext' - lib\features\auth\pages\login_page.dart:49:31 - undefined_method
+  error - The name 'FirebaseAuthException' isn't a type and can't be used in an on-catch clause - lib\features\auth\pages\login_page.dart:58:10 - non_type_in_catch_clause
+  error - Undefined name 'FirebaseAuth' - lib\features\auth\pages\login_page.dart:96:13 - undefined_identifier
+  error - Target of URI doesn't exist: 'package:provider/provider.dart' - lib\features\auth\pages\splash_page.dart:2:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: 'package:firebase_auth/firebase_auth.dart' - lib\features\auth\pages\splash_page.dart:3:8 - uri_does_not_exist
+  error - Undefined name 'FirebaseAuth' - lib\features\auth\pages\splash_page.dart:45:18 - undefined_identifier
+  error - The method 'read' isn't defined for the type 'BuildContext' - lib\features\auth\pages\splash_page.dart:47:31 - undefined_method
+  error - Target of URI doesn't exist: 'package:http/http.dart' - lib\features\batch\pages\start_new_batch_page.dart:2:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: 'package:firebase_auth/firebase_auth.dart' - lib\features\batch\pages\start_new_batch_page.dart:4:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: 'package:provider/provider.dart' - lib\features\batch\pages\start_new_batch_page.dart:5:8 - uri_does_not_exist
+  error - The method 'read' isn't defined for the type 'BuildContext' - lib\features\batch\pages\start_new_batch_page.dart:57:29 - undefined_method
+  error - Undefined name 'FirebaseAuth' - lib\features\batch\pages\start_new_batch_page.dart:66:20 - undefined_identifier
+  error - The method 'read' isn't defined for the type 'BuildContext' - lib\features\batch\pages\start_new_batch_page.dart:104:29 - undefined_method
+  error - Undefined name 'FirebaseAuth' - lib\features\batch\pages\start_new_batch_page.dart:137:20 - undefined_identifier
+  error - The method 'watch' isn't defined for the type 'BuildContext' - lib\features\batch\pages\start_new_batch_page.dart:293:27 - undefined_method
+  error - Target of URI doesn't exist: 'package:provider/provider.dart' - lib\features\connection\pages\connection_mode_page.dart:2:8 - uri_does_not_exist
+  error - The method 'read' isn't defined for the type 'BuildContext' - lib\features\connection\pages\connection_mode_page.dart:21:29 - undefined_method
+  error - Target of URI doesn't exist: 'package:provider/provider.dart' - lib\features\controls\pages\manual_controls_page.dart:2:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: 'package:http/http.dart' - lib\features\controls\pages\manual_controls_page.dart:3:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: 'package:firebase_auth/firebase_auth.dart' - lib\features\controls\pages\manual_controls_page.dart:6:8 - uri_does_not_exist
+  error - The method 'read' isn't defined for the type 'BuildContext' - lib\features\controls\pages\manual_controls_page.dart:28:29 - undefined_method
+  error - Undefined name 'FirebaseAuth' - lib\features\controls\pages\manual_controls_page.dart:45:20 - undefined_identifier
+  error - The method 'read' isn't defined for the type 'BuildContext' - lib\features\controls\pages\manual_controls_page.dart:65:33 - undefined_method
+  error - The method 'read' isn't defined for the type 'BuildContext' - lib\features\controls\pages\manual_controls_page.dart:100:29 - undefined_method
+  error - Undefined name 'FirebaseAuth' - lib\features\controls\pages\manual_controls_page.dart:143:20 - undefined_identifier
+  error - The method 'read' isn't defined for the type 'BuildContext' - lib\features\controls\pages\manual_controls_page.dart:197:29 - undefined_method
+  error - Undefined name 'FirebaseAuth' - lib\features\controls\pages\manual_controls_page.dart:217:20 - undefined_identifier
+  error - The method 'read' isn't defined for the type 'BuildContext' - lib\features\controls\pages\manual_controls_page.dart:386:51 - undefined_method
+  error - The method 'read' isn't defined for the type 'BuildContext' - lib\features\controls\pages\manual_controls_page.dart:439:77 - undefined_method
+  error - Target of URI doesn't exist: 'package:provider/provider.dart' - lib\features\dashboard\pages\dashboard_page.dart:2:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: 'package:http/http.dart' - lib\features\dashboard\pages\dashboard_page.dart:4:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: 'package:firebase_auth/firebase_auth.dart' - lib\features\dashboard\pages\dashboard_page.dart:10:8 - uri_does_not_exist
+  error - The method 'read' isn't defined for the type 'BuildContext' - lib\features\dashboard\pages\dashboard_page.dart:33:31 - undefined_method
+  error - The method 'read' isn't defined for the type 'BuildContext' - lib\features\dashboard\pages\dashboard_page.dart:41:29 - undefined_method
+  error - Undefined name 'FirebaseAuth' - lib\features\dashboard\pages\dashboard_page.dart:44:20 - undefined_identifier
+  error - The method 'read' isn't defined for the type 'BuildContext' - lib\features\dashboard\pages\dashboard_page.dart:46:27 - undefined_method
+  error - The method 'watch' isn't defined for the type 'BuildContext' - lib\features\dashboard\pages\dashboard_page.dart:72:29 - undefined_method
+  error - The method 'watch' isn't defined for the type 'BuildContext' - lib\features\dashboard\pages\dashboard_page.dart:745:29 - undefined_method
+  error - Undefined name 'Provider' - lib\features\dashboard\pages\dashboard_page.dart:880:21 - undefined_identifier
+  error - Undefined name 'FirebaseAuth' - lib\features\dashboard\pages\dashboard_page.dart:887:20 - undefined_identifier
+  error - Target of URI doesn't exist: 'package:provider/provider.dart' - lib\features\pair\pages\pair_device_page.dart:3:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: 'package:permission_handler/permission_handler.dart' - lib\features\pair\pages\pair_device_page.dart:4:8 - uri_does_not_exist
+  error - The name 'Permission' isn't a type, so it can't be used as a type argument - lib\features\pair\pages\pair_device_page.dart:28:15 - non_type_as_type_argument
+  error - The name 'PermissionStatus' isn't a type, so it can't be used as a type argument - lib\features\pair\pages\pair_device_page.dart:28:27 - non_type_as_type_argument
+  error - Undefined name 'Permission' - lib\features\pair\pages\pair_device_page.dart:29:7 - undefined_identifier
+  error - Undefined name 'Permission' - lib\features\pair\pages\pair_device_page.dart:30:7 - undefined_identifier
+  error - Undefined name 'Permission' - lib\features\pair\pages\pair_device_page.dart:31:7 - undefined_identifier
+  error - The method 'request' isn't defined for the type 'List' - lib\features\pair\pages\pair_device_page.dart:32:7 - undefined_method
+  error - The property 'isDenied' can't be unconditionally accessed because the receiver can be 'null' - lib\features\pair\pages\pair_device_page.dart:34:48 - unchecked_use_of_nullable_value
+  error - The method 'read' isn't defined for the type 'BuildContext' - lib\features\pair\pages\pair_device_page.dart:46:13 - undefined_method
+  error - The method 'read' isn't defined for the type 'BuildContext' - lib\features\pair\pages\pair_device_page.dart:53:27 - undefined_method
+  error - The method 'read' isn't defined for the type 'BuildContext' - lib\features\pair\pages\pair_device_page.dart:70:33 - undefined_method
+  error - The method 'read' isn't defined for the type 'BuildContext' - lib\features\pair\pages\pair_device_page.dart:98:37 - undefined_method
+  error - The method 'read' isn't defined for the type 'BuildContext' - lib\features\pair\pages\pair_device_page.dart:110:17 - undefined_method
+  error - The method 'watch' isn't defined for the type 'BuildContext' - lib\features\pair\pages\pair_device_page.dart:134:25 - undefined_method
+  error - Target of URI doesn't exist: 'package:provider/provider.dart' - lib\features\pair\pages\pair_success_page.dart:2:8 - uri_does_not_exist
+  error - The method 'watch' isn't defined for the type 'BuildContext' - lib\features\pair\pages\pair_success_page.dart:15:29 - undefined_method
+  error - The method 'read' isn't defined for the type 'BuildContext' - lib\features\pair\pages\pair_success_page.dart:183:39 - undefined_method
+  error - Target of URI doesn't exist: 'package:http/http.dart' - lib\features\records\pages\my_records_page.dart:3:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: 'package:firebase_auth/firebase_auth.dart' - lib\features\records\pages\my_records_page.dart:5:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: 'package:provider/provider.dart' - lib\features\records\pages\my_records_page.dart:6:8 - uri_does_not_exist
+  error - Undefined name 'FirebaseAuth' - lib\features\records\pages\my_records_page.dart:43:20 - undefined_identifier
+  error - The method 'watch' isn't defined for the type 'BuildContext' - lib\features\records\pages\my_records_page.dart:131:29 - undefined_method
+  error - Target of URI doesn't exist: 'package:provider/provider.dart' - lib\features\settings\pages\edit_profile_page.dart:2:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: 'package:firebase_auth/firebase_auth.dart' - lib\features\settings\pages\edit_profile_page.dart:3:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: 'package:firebase_storage/firebase_storage.dart' - lib\features\settings\pages\edit_profile_page.dart:4:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: 'package:image_picker/image_picker.dart' - lib\features\settings\pages\edit_profile_page.dart:5:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: 'package:shared_preferences/shared_preferences.dart' - lib\features\settings\pages\edit_profile_page.dart:6:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: 'package:http/http.dart' - lib\features\settings\pages\edit_profile_page.dart:7:8 - uri_does_not_exist
+  error - The method 'read' isn't defined for the type 'BuildContext' - lib\features\settings\pages\edit_profile_page.dart:31:29 - undefined_method
+  error - The method 'ImagePicker' isn't defined for the type '_EditProfilePageState' - lib\features\settings\pages\edit_profile_page.dart:50:20 - undefined_method
+  error - Undefined name 'ImageSource' - lib\features\settings\pages\edit_profile_page.dart:51:55 - undefined_identifier
+  error - Undefined name 'FirebaseAuth' - lib\features\settings\pages\edit_profile_page.dart:55:22 - undefined_identifier
+  error - Undefined name 'FirebaseStorage' - lib\features\settings\pages\edit_profile_page.dart:58:28 - undefined_identifier
+  error - Undefined name 'FirebaseAuth' - lib\features\settings\pages\edit_profile_page.dart:95:20 - undefined_identifier
+  error - The method 'read' isn't defined for the type 'BuildContext' - lib\features\settings\pages\edit_profile_page.dart:111:29 - undefined_method
+  error - Undefined name 'FirebaseAuth' - lib\features\settings\pages\edit_profile_page.dart:134:18 - undefined_identifier
+  error - Undefined name 'FirebaseAuth' - lib\features\settings\pages\edit_profile_page.dart:432:20 - undefined_identifier
+  error - Undefined name 'EmailAuthProvider' - lib\features\settings\pages\edit_profile_page.dart:438:26 - undefined_identifier
+  error - Undefined name 'SharedPreferences' - lib\features\settings\pages\edit_profile_page.dart:473:27 - undefined_identifier
+  error - The name 'FirebaseAuthException' isn't a type and can't be used in an on-catch clause - lib\features\settings\pages\edit_profile_page.dart:488:10 - non_type_in_catch_clause
+  error - Target of URI doesn't exist: 'package:provider/provider.dart' - lib\features\settings\pages\settings_page.dart:2:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: 'package:firebase_auth/firebase_auth.dart' - lib\features\settings\pages\settings_page.dart:3:8 - uri_does_not_exist
+  error - The method 'read' isn't defined for the type 'BuildContext' - lib\features\settings\pages\settings_page.dart:26:29 - undefined_method
+  error - The method 'watch' isn't defined for the type 'BuildContext' - lib\features\settings\pages\settings_page.dart:41:37 - undefined_method
+  error - The method 'watch' isn't defined for the type 'BuildContext' - lib\features\settings\pages\settings_page.dart:42:29 - undefined_method
+  error - The method 'read' isn't defined for the type 'BuildContext' - lib\features\settings\pages\settings_page.dart:303:41 - undefined_method
+  error - Undefined name 'FirebaseAuth' - lib\features\settings\pages\settings_page.dart:408:25 - undefined_identifier
+  error - The method 'watch' isn't defined for the type 'BuildContext' - lib\features\settings\pages\settings_page.dart:450:29 - undefined_method
+  error - Undefined name 'FirebaseAuth' - lib\features\settings\pages\settings_page.dart:507:20 - undefined_identifier
+  error - The method 'read' isn't defined for the type 'BuildContext' - lib\features\settings\pages\settings_page.dart:513:33 - undefined_method
+  error - Undefined name 'FirebaseAuth' - lib\features\settings\pages\settings_page.dart:522:20 - undefined_identifier
+  error - The method 'read' isn't defined for the type 'BuildContext' - lib\features\settings\pages\settings_page.dart:528:33 - undefined_method
+  error - Target of URI doesn't exist: 'package:provider/provider.dart' - lib\features\wifi\pages\wifi_setup_ble_step1_page.dart:3:8 - uri_does_not_exist
+  error - The method 'read' isn't defined for the type 'BuildContext' - lib\features\wifi\pages\wifi_setup_ble_step1_page.dart:33:25 - undefined_method
+  error - The method 'read' isn't defined for the type 'BuildContext' - lib\features\wifi\pages\wifi_setup_ble_step1_page.dart:44:25 - undefined_method
+  error - The method 'read' isn't defined for the type 'BuildContext' - lib\features\wifi\pages\wifi_setup_ble_step1_page.dart:45:29 - undefined_method
+  error - The method 'read' isn't defined for the type 'BuildContext' - lib\features\wifi\pages\wifi_setup_ble_step1_page.dart:58:17 - undefined_method
+  error - The method 'read' isn't defined for the type 'BuildContext' - lib\features\wifi\pages\wifi_setup_ble_step1_page.dart:67:17 - undefined_method
+  error - The method 'read' isn't defined for the type 'BuildContext' - lib\features\wifi\pages\wifi_setup_ble_step1_page.dart:77:25 - undefined_method
+  error - The method 'read' isn't defined for the type 'BuildContext' - lib\features\wifi\pages\wifi_setup_ble_step1_page.dart:78:29 - undefined_method
+  error - The method 'read' isn't defined for the type 'BuildContext' - lib\features\wifi\pages\wifi_setup_ble_step1_page.dart:113:25 - undefined_method
+  error - The method 'read' isn't defined for the type 'BuildContext' - lib\features\wifi\pages\wifi_setup_ble_step1_page.dart:127:13 - undefined_method
+  error - The method 'read' isn't defined for the type 'BuildContext' - lib\features\wifi\pages\wifi_setup_ble_step1_page.dart:228:34 - undefined_method
+  error - The method 'read' isn't defined for the type 'BuildContext' - lib\features\wifi\pages\wifi_setup_ble_step1_page.dart:239:32 - undefined_method
+  error - Target of URI doesn't exist: 'package:provider/provider.dart' - lib\features\wifi\pages\wifi_setup_ble_step2_page.dart:4:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: 'package:firebase_auth/firebase_auth.dart' - lib\features\wifi\pages\wifi_setup_ble_step2_page.dart:5:8 - uri_does_not_exist
+  error - The method 'read' isn't defined for the type 'BuildContext' - lib\features\wifi\pages\wifi_setup_ble_step2_page.dart:52:32 - undefined_method
+  error - The method 'read' isn't defined for the type 'BuildContext' - lib\features\wifi\pages\wifi_setup_ble_step2_page.dart:89:31 - undefined_method
+  error - Undefined name 'FirebaseAuth' - lib\features\wifi\pages\wifi_setup_ble_step2_page.dart:91:22 - undefined_identifier
+  error - The method 'read' isn't defined for the type 'BuildContext' - lib\features\wifi\pages\wifi_setup_ble_step2_page.dart:129:32 - undefined_method
+  error - The method 'watch' isn't defined for the type 'BuildContext' - lib\features\wifi\pages\wifi_setup_ble_step2_page.dart:277:30 - undefined_method
+  error - The method 'watch' isn't defined for the type 'BuildContext' - lib\features\wifi\pages\wifi_setup_ble_step2_page.dart:289:32 - undefined_method
+  error - Target of URI doesn't exist: 'package:provider/provider.dart' - lib\features\wifi\pages\wifi_setup_ble_step3_page.dart:3:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: 'package:firebase_auth/firebase_auth.dart' - lib\features\wifi\pages\wifi_setup_ble_step3_page.dart:4:8 - uri_does_not_exist
+  error - The method 'watch' isn't defined for the type 'BuildContext' - lib\features\wifi\pages\wifi_setup_ble_step3_page.dart:41:25 - undefined_method
+  error - The method 'read' isn't defined for the type 'BuildContext' - lib\features\wifi\pages\wifi_setup_ble_step3_page.dart:47:22 - undefined_method
+  error - The method 'read' isn't defined for the type 'BuildContext' - lib\features\wifi\pages\wifi_setup_ble_step3_page.dart:50:18 - undefined_method
+  error - The method 'read' isn't defined for the type 'BuildContext' - lib\features\wifi\pages\wifi_setup_ble_step3_page.dart:57:25 - undefined_method
+  error - The method 'read' isn't defined for the type 'BuildContext' - lib\features\wifi\pages\wifi_setup_ble_step3_page.dart:105:32 - undefined_method
+  error - The method 'read' isn't defined for the type 'BuildContext' - lib\features\wifi\pages\wifi_setup_ble_step3_page.dart:106:32 - undefined_method
+  error - The method 'read' isn't defined for the type 'BuildContext' - lib\features\wifi\pages\wifi_setup_ble_step3_page.dart:173:35 - undefined_method
+  error - The method 'read' isn't defined for the type 'BuildContext' - lib\features\wifi\pages\wifi_setup_ble_step3_page.dart:177:37 - undefined_method
+  error - Undefined name 'FirebaseAuth' - lib\features\wifi\pages\wifi_setup_ble_step3_page.dart:182:28 - undefined_identifier
+  error - The method 'read' isn't defined for the type 'BuildContext' - lib\features\wifi\pages\wifi_setup_ble_step3_page.dart:195:49 - undefined_method
+  error - The method 'read' isn't defined for the type 'BuildContext' - lib\features\wifi\pages\wifi_setup_ble_step3_page.dart:222:40 - undefined_method
+  error - The method 'cancel' can't be unconditionally invoked because the receiver can be 'null' - lib\features\wifi\pages\wifi_setup_ble_step3_page.dart:250:23 - unchecked_use_of_nullable_value
+  error - Target of URI doesn't exist: 'package:firebase_core/firebase_core.dart' - lib\firebase_options.dart:3:8 - uri_does_not_exist
+  error - Const variables must be initialized with a constant value - lib\firebase_options.dart:43:38 - const_initialized_with_non_constant_value
+  error - The method 'FirebaseOptions' isn't defined for the type 'DefaultFirebaseOptions' - lib\firebase_options.dart:43:38 - undefined_method
+  error - Const variables must be initialized with a constant value - lib\firebase_options.dart:53:42 - const_initialized_with_non_constant_value
+  error - The method 'FirebaseOptions' isn't defined for the type 'DefaultFirebaseOptions' - lib\firebase_options.dart:53:42 - undefined_method
+  error - Const variables must be initialized with a constant value - lib\firebase_options.dart:62:38 - const_initialized_with_non_constant_value
+  error - The method 'FirebaseOptions' isn't defined for the type 'DefaultFirebaseOptions' - lib\firebase_options.dart:62:38 - undefined_method
+  error - Const variables must be initialized with a constant value - lib\firebase_options.dart:72:40 - const_initialized_with_non_constant_value
+  error - The method 'FirebaseOptions' isn't defined for the type 'DefaultFirebaseOptions' - lib\firebase_options.dart:72:40 - undefined_method
+  error - Const variables must be initialized with a constant value - lib\firebase_options.dart:82:42 - const_initialized_with_non_constant_value
+  error - The method 'FirebaseOptions' isn't defined for the type 'DefaultFirebaseOptions' - lib\firebase_options.dart:82:42 - undefined_method
+  error - Target of URI doesn't exist: 'package:provider/provider.dart' - lib\main.dart:2:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: 'package:firebase_core/firebase_core.dart' - lib\main.dart:3:8 - uri_does_not_exist
+  error - Undefined name 'Firebase' - lib\main.dart:17:9 - undefined_identifier
+  error - The function 'MultiProvider' isn't defined - lib\main.dart:29:5 - undefined_function
+  error - The function 'ChangeNotifierProvider' isn't defined - lib\main.dart:31:9 - undefined_function
+  error - The function 'ChangeNotifierProvider' isn't defined - lib\main.dart:32:9 - undefined_function
+  error - Undefined name 'ChangeNotifierProvider' - lib\main.dart:33:9 - undefined_identifier
+  error - Undefined name 'ChangeNotifierProvider' - lib\main.dart:34:9 - undefined_identifier
+  error - Undefined name 'Provider' - lib\main.dart:35:9 - undefined_identifier
+  error - Undefined name 'ChangeNotifierProvider' - lib\main.dart:36:9 - undefined_identifier
+  error - Undefined name 'ChangeNotifierProvider' - lib\main.dart:37:9 - undefined_identifier
+  error - Undefined name 'Provider' - lib\main.dart:38:9 - undefined_identifier
+  error - Target of URI doesn't exist: 'package:http/http.dart' - lib\services\api_service.dart:2:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: 'package:firebase_auth/firebase_auth.dart' - lib\services\api_service.dart:3:8 - uri_does_not_exist
+  error - Undefined name 'FirebaseAuth' - lib\services\api_service.dart:58:27 - undefined_identifier
+  error - Target of URI doesn't exist: 'package:firebase_auth/firebase_auth.dart' - lib\services\auth_service.dart:2:8 - uri_does_not_exist
+  error - Undefined class 'FirebaseAuth' - lib\services\auth_service.dart:5:9 - undefined_class
+  error - Undefined name 'FirebaseAuth' - lib\services\auth_service.dart:5:30 - undefined_identifier
+  error - Undefined class 'User' - lib\services\auth_service.dart:7:3 - undefined_class
+  error - Undefined class 'UserCredential' - lib\services\auth_service.dart:21:7 - undefined_class
+  error - Target of URI doesn't exist: 'package:flutter_blue_plus/flutter_blue_plus.dart' - lib\services\ble_service.dart:2:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: 'package:permission_handler/permission_handler.dart' - lib\services\ble_service.dart:7:8 - uri_does_not_exist
+  error - The name 'ScanResult' isn't a type, so it can't be used as a type argument - lib\services\ble_service.dart:64:8 - non_type_as_type_argument
+  error - Undefined class 'BluetoothDevice' - lib\services\ble_service.dart:73:3 - undefined_class
+  error - Undefined class 'BluetoothCharacteristic' - lib\services\ble_service.dart:74:3 - undefined_class
+  error - Undefined class 'BluetoothDevice' - lib\services\ble_service.dart:79:3 - undefined_class
+  error - Undefined name 'FlutterBluePlus' - lib\services\ble_service.dart:86:5 - undefined_identifier
+  error - The method 'Guid' isn't defined for the type 'BleService' - lib\services\ble_service.dart:95:60 - undefined_method
+  error - Undefined name 'FlutterBluePlus' - lib\services\ble_service.dart:103:5 - undefined_identifier
+  error - The name 'Permission' isn't a type, so it can't be used as a type argument - lib\services\ble_service.dart:113:9 - non_type_as_type_argument
+  error - The name 'PermissionStatus' isn't a type, so it can't be used as a type argument - lib\services\ble_service.dart:113:21 - non_type_as_type_argument
+  error - Undefined name 'Permission' - lib\services\ble_service.dart:114:7 - undefined_identifier
+  error - Undefined name 'Permission' - lib\services\ble_service.dart:115:7 - undefined_identifier
+  error - Undefined name 'Permission' - lib\services\ble_service.dart:116:7 - undefined_identifier
+  error - Undefined name 'Permission' - lib\services\ble_service.dart:117:7 - undefined_identifier
+  error - The method 'request' isn't defined for the type 'List' - lib\services\ble_service.dart:118:7 - undefined_method
+  error - The property 'isDenied' can't be unconditionally accessed because the receiver can be 'null' - lib\services\ble_service.dart:120:48 - unchecked_use_of_nullable_value
+  error - Undefined name 'FlutterBluePlus' - lib\services\ble_service.dart:131:13 - undefined_identifier
+  error - Undefined name 'FlutterBluePlus' - lib\services\ble_service.dart:142:11 - undefined_identifier
+  error - Undefined class 'BluetoothDevice' - lib\services\ble_service.dart:149:24 - undefined_class
+  error - Undefined name 'ConnectionPriority' - lib\services\ble_service.dart:177:80 - undefined_identifier
+  error - The name 'BluetoothService' isn't a type, so it can't be used as a type argument - lib\services\ble_service.dart:184:12 - non_type_as_type_argument
+  error - Undefined class 'BluetoothService' - lib\services\ble_service.dart:185:7 - undefined_class
+  error - Undefined name 'BluetoothConnectionState' - lib\services\ble_service.dart:251:22 - undefined_identifier
+  error - Target of URI doesn't exist: 'package:firebase_auth/firebase_auth.dart' - lib\services\device_claim_service.dart:1:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: 'package:firebase_database/firebase_database.dart' - lib\services\device_claim_service.dart:2:8 - uri_does_not_exist
+  error - Undefined class 'FirebaseAuth' - lib\services\device_claim_service.dart:5:9 - undefined_class
+  error - Undefined name 'FirebaseAuth' - lib\services\device_claim_service.dart:5:30 - undefined_identifier
+  error - Undefined class 'DatabaseReference' - lib\services\device_claim_service.dart:6:9 - undefined_class
+  error - Undefined name 'FirebaseDatabase' - lib\services\device_claim_service.dart:6:33 - undefined_identifier
+  error - Target of URI doesn't exist: 'package:http/http.dart' - lib\services\device_setup_service.dart:1:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: 'package:firebase_auth/firebase_auth.dart' - lib\services\device_setup_service.dart:4:8 - uri_does_not_exist
+  error - Undefined name 'FirebaseAuth' - lib\services\device_setup_service.dart:11:20 - undefined_identifier
+  error - Target of URI doesn't exist: 'package:firebase_database/firebase_database.dart' - lib\services\device_transport.dart:4:8 - uri_does_not_exist
+  error - Undefined name 'FirebaseDatabase' - lib\services\device_transport.dart:146:21 - undefined_identifier
+  error - Undefined name 'FirebaseDatabase' - lib\services\device_transport.dart:151:21 - undefined_identifier
+  error - Target of URI doesn't exist: 'package:firebase_database/firebase_database.dart' - lib\services\firebase_service.dart:1:8 - uri_does_not_exist
+  error - Undefined class 'DatabaseReference' - lib\services\firebase_service.dart:103:9 - undefined_class
+  error - Undefined name 'FirebaseDatabase' - lib\services\firebase_service.dart:103:33 - undefined_identifier
+  error - Target of URI doesn't exist: 'package:shared_preferences/shared_preferences.dart' - lib\services\session_store.dart:2:8 - uri_does_not_exist
+  error - Undefined class 'SharedPreferences' - lib\services\session_store.dart:10:3 - undefined_class
+  error - Undefined name 'SharedPreferences' - lib\services\session_store.dart:17:20 - undefined_identifier
+  error - Target of URI doesn't exist: 'package:shared_preferences/shared_preferences.dart' - lib\services\wifi_credential_service.dart:2:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: 'package:firebase_database/firebase_database.dart' - lib\services\wifi_credential_service.dart:3:8 - uri_does_not_exist
+  error - Undefined class 'DatabaseReference' - lib\services\wifi_credential_service.dart:36:9 - undefined_class
+  error - Undefined name 'FirebaseDatabase' - lib\services\wifi_credential_service.dart:36:33 - undefined_identifier
+  error - Undefined name 'ServerValue' - lib\services\wifi_credential_service.dart:69:19 - undefined_identifier
+  error - Undefined name 'ServerValue' - lib\services\wifi_credential_service.dart:70:20 - undefined_identifier
+  error - Undefined name 'ServerValue' - lib\services\wifi_credential_service.dart:77:20 - undefined_identifier
+  error - Undefined name 'ServerValue' - lib\services\wifi_credential_service.dart:86:19 - undefined_identifier
+  error - Undefined name 'ServerValue' - lib\services\wifi_credential_service.dart:92:25 - undefined_identifier
+  error - Undefined name 'SharedPreferences' - lib\services\wifi_credential_service.dart:117:29 - undefined_identifier
+  error - Undefined name 'SharedPreferences' - lib\services\wifi_credential_service.dart:150:25 - undefined_identifier
+  error - Undefined name 'ServerValue' - lib\services\wifi_credential_service.dart:179:19 - undefined_identifier
+  error - Undefined name 'ServerValue' - lib\services\wifi_credential_service.dart:180:20 - undefined_identifier
+  error - Undefined name 'SharedPreferences' - lib\services\wifi_credential_service.dart:186:25 - undefined_identifier
+  error - Undefined name 'SharedPreferences' - lib\services\wifi_credential_service.dart:192:25 - undefined_identifier
+  error - Target of URI doesn't exist: 'package:google_fonts/google_fonts.dart' - lib\theme\app_theme.dart:2:8 - uri_does_not_exist
+  error - Undefined name 'GoogleFonts' - lib\theme\app_theme.dart:105:21 - undefined_identifier
+  error - Undefined name 'GoogleFonts' - lib\theme\app_theme.dart:112:22 - undefined_identifier
+  error - Undefined name 'GoogleFonts' - lib\theme\app_theme.dart:119:23 - undefined_identifier
+  error - Undefined name 'GoogleFonts' - lib\theme\app_theme.dart:125:22 - undefined_identifier
+  error - Undefined name 'GoogleFonts' - lib\theme\app_theme.dart:131:18 - undefined_identifier
+  error - Undefined name 'GoogleFonts' - lib\theme\app_theme.dart:137:19 - undefined_identifier
+  error - Undefined name 'GoogleFonts' - lib\theme\app_theme.dart:143:18 - undefined_identifier
+  error - Undefined name 'GoogleFonts' - lib\theme\app_theme.dart:149:19 - undefined_identifier
+  error - Undefined name 'GoogleFonts' - lib\theme\app_theme.dart:155:20 - undefined_identifier
+  error - Undefined name 'GoogleFonts' - lib\theme\app_theme.dart:161:19 - undefined_identifier
+  error - Undefined name 'GoogleFonts' - lib\theme\app_theme.dart:189:25 - undefined_identifier
+  error - Undefined name 'GoogleFonts' - lib\theme\app_theme.dart:222:20 - undefined_identifier
+  error - Undefined name 'GoogleFonts' - lib\theme\app_theme.dart:227:21 - undefined_identifier
+  error - Undefined name 'GoogleFonts' - lib\theme\app_theme.dart:246:22 - undefined_identifier
+  error - Undefined name 'GoogleFonts' - lib\theme\app_theme.dart:260:22 - undefined_identifier
+  error - Undefined name 'GoogleFonts' - lib\theme\app_theme.dart:269:22 - undefined_identifier
+  error - Undefined name 'GoogleFonts' - lib\theme\app_theme.dart:276:27 - undefined_identifier
+  error - Undefined name 'GoogleFonts' - lib\theme\app_theme.dart:287:25 - undefined_identifier
+  error - Undefined name 'GoogleFonts' - lib\theme\app_theme.dart:354:25 - undefined_identifier
+  error - Undefined name 'GoogleFonts' - lib\theme\app_theme.dart:388:20 - undefined_identifier
+  error - Undefined name 'GoogleFonts' - lib\theme\app_theme.dart:393:21 - undefined_identifier
+  error - Undefined name 'GoogleFonts' - lib\theme\app_theme.dart:412:22 - undefined_identifier
+  error - Undefined name 'GoogleFonts' - lib\theme\app_theme.dart:426:22 - undefined_identifier
+  error - Undefined name 'GoogleFonts' - lib\theme\app_theme.dart:435:22 - undefined_identifier
+  error - Undefined name 'GoogleFonts' - lib\theme\app_theme.dart:442:27 - undefined_identifier
+  error - Undefined name 'GoogleFonts' - lib\theme\app_theme.dart:453:25 - undefined_identifier
+  error - Target of URI doesn't exist: 'package:shared_preferences/shared_preferences.dart' - lib\theme\theme_controller.dart:2:8 - uri_does_not_exist
+  error - Undefined name 'SharedPreferences' - lib\theme\theme_controller.dart:15:25 - undefined_identifier
+  error - Undefined name 'SharedPreferences' - lib\theme\theme_controller.dart:23:25 - undefined_identifier
+  error - Target of URI doesn't exist: 'package:provider/provider.dart' - lib\widgets\mode_toggle_button.dart:2:8 - uri_does_not_exist
+  error - The method 'watch' isn't defined for the type 'BuildContext' - lib\widgets\mode_toggle_button.dart:10:37 - undefined_method
+  error - Target of URI doesn't exist: 'package:provider/provider.dart' - test\widget_test.dart:2:8 - uri_does_not_exist
+  error - The function 'MultiProvider' isn't defined - test\widget_test.dart:10:7 - undefined_function
+  error - The function 'ChangeNotifierProvider' isn't defined - test\widget_test.dart:12:11 - undefined_function
+  error - The function 'ChangeNotifierProvider' isn't defined - test\widget_test.dart:13:11 - undefined_function
+

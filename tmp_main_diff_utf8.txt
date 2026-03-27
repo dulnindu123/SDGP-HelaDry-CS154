@@ -1,0 +1,186 @@
+﻿diff --git a/src/main.cpp b/src/main.cpp
+index 59e57e53..4cf77105 100644
+--- a/src/main.cpp
++++ b/src/main.cpp
+@@ -190,6 +190,11 @@ static String             bleDeviceName = "HELADRY-0000";
+ 
+ // WiFi state
+ static bool wifiConnected = false;
++static bool pendingWifiScan = false;
++static bool pendingWifiConnect = false;
++static uint32_t wifiConnectStartMs = 0;
++static String provisioningSsid = "";
++static String provisioningPass = "";
+ 
+ // LittleFS logging
+ static bool littlefs_ok = false;
+@@ -619,6 +624,10 @@ static void pushLiveToFirebase() {
+   json.set("alert_low_bat",    alerts.lowBattery);
+   json.set("alert_sensor",     alerts.sensorFault);
+   json.set("ts_ms",            (int)nowMs());
++  if (wifiConnected) {
++    json.set("ip_address",       WiFi.localIP().toString().c_str());
++    json.set("wifi_connected",   wifiConnected);
++  }
+ 
+   if (!Firebase.RTDB.setJSON(&fbdo, buildPathLive().c_str(), &json)) {
+     Serial.printf("[Firebase] Live push failed: %s\n", fbdo.errorReason().c_str());
+@@ -660,6 +669,15 @@ static void fbSetBool(const String &path, bool v) {
+   if (WiFi.status() != WL_CONNECTED || !Firebase.ready()) return;
+   Firebase.RTDB.setBool(&fbdo, path.c_str(), v);
+ }
++static bool fbGetString(const String &path, String &out) {
++  if (WiFi.status() != WL_CONNECTED || !Firebase.ready()) return false;
++  if (Firebase.RTDB.getString(&fbdo, path.c_str())) { out = fbdo.stringData(); return true; }
++  return false;
++}
++static void fbSetString(const String &path, const String &v) {
++  if (WiFi.status() != WL_CONNECTED || !Firebase.ready()) return;
++  Firebase.RTDB.setString(&fbdo, path.c_str(), v);
++}
+ 
+ static void pollFirebaseCommands() {
+   if (WiFi.status() != WL_CONNECTED || !Firebase.ready()) return;
+@@ -702,6 +720,26 @@ static void pollFirebaseCommands() {
+     fbSetBool(cmdBase+"/emergency_stop", false);
+     Serial.println("[CMD] EMERGENCY STOP via Firebase");
+   }}
++
++  // Session Commands via Firebase
++  { String cmdStr; if (fbGetString(cmdBase+"/session_cmd", cmdStr) && cmdStr.length() > 0) {
++      if (cmdStr == "START") {
++          String crop = "Unknown";
++          float tTemp = target_temp_c;
++          fbGetString(cmdBase+"/session_crop", crop);
++          fbGetFloat(cmdBase+"/session_target_temp", tTemp);
++          startSession(crop, tTemp, filteredWeight_g);
++      } else if (cmdStr == "STOP") {
++          stopSession();
++      } else if (cmdStr == "PAUSE") {
++          pauseSession();
++      } else if (cmdStr == "RESUME") {
++          resumeSession();
++      }
++      
++      // Clear the command
++      fbSetString(cmdBase+"/session_cmd", "");
++  }}
+ }
+ 
+ // ========================= BLE CALLBACKS =========================
+@@ -805,17 +843,27 @@ class CommandCallbacks : public BLECharacteristicCallbacks {
+       }
+       sendBleAck("SET_MANUAL_OUTPUTS", "done");
+     }
++    else if (cmd == "SCAN_WIFI") {
++      pendingWifiScan = true;
++    }
+     else if (cmd == "SET_WIFI_CREDS") {
+       String ssid = doc["ssid"] | "";
+       String pass = doc["pass"] | "";
+       if (ssid.length() > 0) {
+-        wifiSaveCredentials(ssid, pass);
+-        sendBleAck("SET_WIFI_CREDS", "done");
+-        // Try connecting immediately
++        provisioningSsid = ssid;
++        provisioningPass = pass;
++        WiFi.disconnect();
+         WiFi.begin(ssid.c_str(), pass.c_str());
+-        Serial.printf("[BLE] WiFi provisioning: %s\n", ssid.c_str());
++        pendingWifiConnect = true;
++        wifiConnectStartMs = nowMs();
++        Serial.printf("[BLE] WiFi provisioning started for: %s\n", ssid.c_str());
+       } else {
+-        sendBleAck("SET_WIFI_CREDS", "failed");
++        JsonDocument res;
++        res["cmd"] = "WIFI_CONNECT_RESULT";
++        res["status"] = "failed";
++        res["reason"] = "invalid_ssid";
++        String out; serializeJson(res, out);
++        if (pAckChar) { pAckChar->setValue(out.c_str()); pAckChar->notify(); }
+       }
+     }
+     else if (cmd == "EMERGENCY_STOP") {
+@@ -902,6 +950,9 @@ static void bleNotifyState() {
+   doc["crop"]       = sessionCropName;
+   doc["tgt_temp"]   = serialized(String(target_temp_c, 1));
+   doc["progress"]   = serialized(String(dryingProgressPct(initialWeight_g, filteredWeight_g), 1));
++  if (wifiConnected) {
++    doc["ip"] = WiFi.localIP().toString().c_str();
++  }
+ 
+   // Alerts
+   JsonObject al = doc["alerts"].to<JsonObject>();
+@@ -975,8 +1026,71 @@ void setup() {
+ void loop() {
+   uint32_t now = nowMs();
+ 
++  // Handle WiFi Scan Request
++  if (pendingWifiScan) {
++    pendingWifiScan = false;
++    Serial.println("[WIFI] Scanning networks...");
++    int n = WiFi.scanNetworks();
++    JsonDocument doc;
++    doc["cmd"] = "WIFI_SCAN_RESULT";
++    JsonArray networks = doc["networks"].to<JsonArray>();
++    if (n > 0) {
++      int limit = n > 8 ? 8 : n;
++      for (int i = 0; i < limit; ++i) {
++        JsonObject net = networks.add<JsonObject>();
++        net["ssid"] = WiFi.SSID(i);
++        net["rssi"] = WiFi.RSSI(i);
++      }
++    }
++    String out;
++    serializeJson(doc, out);
++    if (pAckChar && bleConnected) {
++      pAckChar->setValue(out.c_str());
++      pAckChar->notify();
++    }
++    WiFi.scanDelete();
++  }
++
++  // Handle WiFi Provisioning Connection
++  if (pendingWifiConnect) {
++    if (WiFi.status() == WL_CONNECTED) {
++      pendingWifiConnect = false;
++      wifiConnected = true;
++      wifiSaveCredentials(provisioningSsid, provisioningPass);
++      
++      JsonDocument doc;
++      doc["cmd"] = "WIFI_CONNECT_RESULT";
++      doc["status"] = "connected";
++      doc["ip"] = WiFi.localIP().toString();
++      String out;
++      serializeJson(doc, out);
++      if (pAckChar && bleConnected) {
++        pAckChar->setValue(out.c_str());
++        pAckChar->notify();
++      }
++      Serial.printf("[WiFi] Provisioning connected! IP: %s\n", WiFi.localIP().toString().c_str());
++      firebaseInitIfWiFi();
++    } else if (now - wifiConnectStartMs > WIFI_CONNECT_TIMEOUT_MS) {
++      pendingWifiConnect = false;
++      JsonDocument doc;
++      doc["cmd"] = "WIFI_CONNECT_RESULT";
++      doc["status"] = "failed";
++      doc["reason"] = "timeout";
++      String out;
++      serializeJson(doc, out);
++      if (pAckChar && bleConnected) {
++        pAckChar->setValue(out.c_str());
++        pAckChar->notify();
++      }
++      Serial.println("[WiFi] Provisioning failed (timeout)");
++      WiFi.disconnect();
++    }
++  }
++
+   // WiFi maintenance
+-  wifiMaintain();
++  if (!pendingWifiConnect) {
++    wifiMaintain();
++  }
+ 
+   // BLE re-advertise if disconnected
+   bleMaintainAdvertising();
