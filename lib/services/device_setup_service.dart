@@ -5,7 +5,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../app/app_config.dart';
 
 class DeviceSetupService {
-  static Future<void> registerDeviceWithBackend(String receivedIdFromBluetooth) async {
+  static Future<void> registerDeviceWithBackend(
+      String receivedIdFromBluetooth) async {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) return;
@@ -21,17 +22,18 @@ class DeviceSetupService {
         },
         body: jsonEncode({
           "device_id": receivedIdFromBluetooth,
-          "device_name": "My HelaDry Device", 
+          "device_name": "My HelaDry Device",
         }),
-      );
+      ).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 201 || response.statusCode == 200) {
-        print("Registration Successful: Device $receivedIdFromBluetooth is now linked.");
+        debugPrint(
+            "Registration Successful: Device $receivedIdFromBluetooth is now linked.");
       } else {
-        print("Registration Failed: ${response.body}");
+        debugPrint("Registration Failed: ${response.body}");
       }
     } catch (e) {
-      print("Error registering device: $e");
+      debugPrint("Error registering device: $e");
     }
   }
 }

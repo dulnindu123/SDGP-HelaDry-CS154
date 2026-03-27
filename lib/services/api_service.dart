@@ -4,7 +4,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import '../app/app_config.dart';
 
-
 class ApiService {
   String _baseUrl = AppConfig.baseUrl;
   String get baseUrl => _baseUrl;
@@ -12,14 +11,28 @@ class ApiService {
   void setBaseUrl(String ip) {
     if (ip.isEmpty) return;
     String cleanIp = ip.trim();
-    if (!cleanIp.startsWith("http")) {
-      cleanIp = "https://$cleanIp";
+    // Strip trailing slashes to avoid double slashes in API calls
+    while (cleanIp.endsWith('/')) {
+      cleanIp = cleanIp.substring(0, cleanIp.length - 1);
     }
-    if (cleanIp.contains(".onrender.com")) {
-      // Do not add :5000 for Render URLs
-    } else if (!cleanIp.contains(":5000") && !cleanIp.startsWith("https")) {
+    
+    if (!cleanIp.startsWith("http")) {
+      // Default to http for local/private IPs, otherwise https
+      if (cleanIp.startsWith("192.168.") || 
+          cleanIp.startsWith("10.") || 
+          cleanIp.startsWith("172.") || 
+          cleanIp.startsWith("localhost")) {
+        cleanIp = "http://$cleanIp";
+      } else {
+        cleanIp = "https://$cleanIp";
+      }
+    }
+    
+    // Append :5000 if no port is specified and it's not a production (Render) URL
+    if (!cleanIp.contains(".onrender.com") && !RegExp(r':\d+').hasMatch(cleanIp)) {
       cleanIp = "$cleanIp:5000";
     }
+    
     _baseUrl = cleanIp;
     debugPrint("ApiService: Base URL updated to $_baseUrl");
   }
@@ -30,18 +43,20 @@ class ApiService {
       if (response.statusCode == 200) {
         debugPrint("✅ Success: ${response.body}");
       } else {
-        debugPrint("⚠️ Server reached, but returned error: ${response.statusCode}");
+        debugPrint(
+            "⚠️ Server reached, but returned error: ${response.statusCode}");
       }
     } catch (e) {
       debugPrint("❌ Connection failed: $e");
-      debugPrint("Check if your phone/emulator is on the same WiFi as $_baseUrl");
+      debugPrint(
+          "Please check your internet connection and verify the backend URL: $_baseUrl");
     }
   }
 
   Future<Map<String, String>> _getAuthHeaders() async {
     // This pulls the unique ID Token from the user who logged in on your Login Page
     String? token = await FirebaseAuth.instance.currentUser?.getIdToken(true);
-    
+
     return {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer $token',
@@ -112,7 +127,8 @@ class ApiService {
       await http.post(
         Uri.parse('$_baseUrl/device/toggle-heater'),
         headers: await _getAuthHeaders(),
-        body: jsonEncode({'device_id': deviceId, 'heater_state': state ? 'ON' : 'OFF'}),
+        body: jsonEncode(
+            {'device_id': deviceId, 'heater_state': state ? 'ON' : 'OFF'}),
       );
     } catch (e) {
       debugPrint("API Toggle Heater Error: $e");

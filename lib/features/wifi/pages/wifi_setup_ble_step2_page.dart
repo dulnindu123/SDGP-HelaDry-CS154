@@ -59,9 +59,11 @@ class _WifiSetupBleStep2PageState extends State<WifiSetupBleStep2Page> {
           int rssi = n['r'] ?? -100;
           if (rssi > -60) {
             q = "Excellent";
-          } else if (rssi > -70)
+          } else if (rssi > -70) {
             q = "Good";
-          else if (rssi > -80) q = "Fair";
+          } else if (rssi > -80) {
+            q = "Fair";
+          }
 
           return ScannedNetwork(
             ssid: n['s'] ?? 'Unknown',
@@ -125,7 +127,11 @@ class _WifiSetupBleStep2PageState extends State<WifiSetupBleStep2Page> {
   }
 
   void _startScan() async {
-    setState(() => _state = 'scanning');
+    setState(() {
+      _state = 'scanning';
+      _networks = [];
+      _showScannedNetworks = true;
+    });
     final bleService = context.read<BleService>();
 
     if (!bleService.isConnected) {
@@ -156,8 +162,8 @@ class _WifiSetupBleStep2PageState extends State<WifiSetupBleStep2Page> {
       return;
     }
 
-    // Timeout: firmware scan takes up to 12s, give 18s total
-    Future.delayed(const Duration(seconds: 18), () {
+    // Timeout: firmware scan takes up to 12s, give 30s total
+    Future.delayed(const Duration(seconds: 30), () {
       if (!mounted) return;
       if (_state == 'scanning') {
         setState(() {

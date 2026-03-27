@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../services/session_store.dart';
-import '../../../services/api_service.dart'; // Ensure this path is correct
 import '../../../app/routes.dart';
 import '../../../widgets/app_text_field.dart';
 import '../../../widgets/primary_button.dart';
@@ -37,8 +36,8 @@ class _LoginPageState extends State<LoginPage> {
 
     try {
       // 1. Firebase Authentication Sign In
-      final UserCredential userCredential = await FirebaseAuth.instance
-          .signInWithEmailAndPassword(
+      final UserCredential userCredential =
+          await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
@@ -54,10 +53,9 @@ class _LoginPageState extends State<LoginPage> {
 
       // 3. Navigate to the next screen
       Navigator.of(context).pushReplacementNamed(AppRoutes.connectionMode);
-      
     } on FirebaseAuthException catch (e) {
       String message = 'An authentication error occurred.';
-      
+
       if (e.code == 'user-not-found') {
         message = 'No account found for this email.';
       } else if (e.code == 'wrong-password') {
@@ -76,7 +74,8 @@ class _LoginPageState extends State<LoginPage> {
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Connection failed. Please check your network.')),
+        const SnackBar(
+            content: Text('Connection failed. Please check your network.')),
       );
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -98,7 +97,8 @@ class _LoginPageState extends State<LoginPage> {
       );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Password reset link sent to your email!')),
+        const SnackBar(
+            content: Text('Password reset link sent to your email!')),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -154,8 +154,8 @@ class _LoginPageState extends State<LoginPage> {
                 Text(
                   'Welcome Back',
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -257,7 +257,8 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     GestureDetector(
                       onTap: () {
-                        Navigator.of(context).pushNamed(AppRoutes.createAccount);
+                        Navigator.of(context)
+                            .pushNamed(AppRoutes.createAccount);
                       },
                       child: Text(
                         'Create Account',
@@ -272,19 +273,6 @@ class _LoginPageState extends State<LoginPage> {
                   ],
                 ),
 
-                const SizedBox(height: 32),
-                const Divider(),
-                const SizedBox(height: 16),
-
-                // 🧪 Debug Connection Button
-                TextButton.icon(
-                  onPressed: () => ApiService().checkServerStatus(),
-                  icon: const Icon(Icons.analytics_outlined),
-                  label: const Text("Debug: Test Flask Connection"),
-                  style: TextButton.styleFrom(
-                    foregroundColor: isDark ? Colors.white70 : Colors.black54,
-                  ),
-                ),
               ],
             ),
           ),

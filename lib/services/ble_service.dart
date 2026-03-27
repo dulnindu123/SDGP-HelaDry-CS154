@@ -55,15 +55,16 @@ class DeviceState {
 }
 
 class BleService extends ChangeNotifier {
-  static const String SERVICE_UUID = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";
-  static const String CHAR_STATE_UUID = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
-  static const String CHAR_CMD_UUID = "beb5483e-36e1-4688-b7f5-ea07361b26a9";
-  static const String CHAR_ACK_UUID = "beb5483e-36e1-4688-b7f5-ea07361b26aa";
+  static const String serviceUuid = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";
+  static const String charStateUuid = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
+  static const String charCmdUuid = "beb5483e-36e1-4688-b7f5-ea07361b26a9";
+  static const String charAckUuid = "beb5483e-36e1-4688-b7f5-ea07361b26aa";
 
   BleConnectionStatus status = BleConnectionStatus.disconnected;
   List<ScanResult> scanResults = [];
   DeviceState? deviceState;
   String? lastAck;
+  String _ackBuffer = ""; // Buffer for fragmented JSON packets
   final StreamController<String> _ackStreamController = StreamController<String>.broadcast();
   Stream<String> get ackStream => _ackStreamController.stream;
 
@@ -89,9 +90,9 @@ class BleService extends ChangeNotifier {
         scanResults = results.where((r) {
           final name = (r.device.platformName.isNotEmpty 
               ? r.device.platformName 
-              : r.advertisementData.localName).toUpperCase();
+              : r.advertisementData.advName).toUpperCase();
           return name.startsWith("HELADRY") || 
-                 r.advertisementData.serviceUuids.contains(Guid(SERVICE_UUID));
+                 r.advertisementData.serviceUuids.contains(Guid(serviceUuid));
         }).toList();
         _lastScanNotify = now;
         notifyListeners();
@@ -150,111 +151,130 @@ class BleService extends ChangeNotifier {
     notifyListeners();
     
     try {
-      await stopScan();
-      // Allow BLE stack to settle after scan stop
-      await Future.delayed(const Duration(milliseconds: 200));
-      
-      await device.connect(autoConnect: false);
-      _device = device;
-
-      // Allow stabilization before MTU/Priority requests
-      await Future.delayed(const Duration(milliseconds: 300));
-
-      // Request larger MTU for JSON data (scans, etc)
-      try {
-        // 256 is safer than 512 for many Android devices
-        await device.requestMtu(256);
-        developer.log("BLE: Requested 256 MTU");
-        await Future.delayed(const Duration(milliseconds: 500));
-      } catch (e) {
-        developer.log("MTU request failed: $e");
-      }
-
-      // Optimization: Request high connection priority on Android for faster throughput
-      try {
-        if (Platform.isAndroid) {
-             await device.requestConnectionPriority(connectionPriorityRequest: ConnectionPriority.high);
-             developer.log("BLE: Requested High Priority Connection");
-        }
-      } catch (e) {
-        developer.log("Priority request error: $e");
-      }
-
-      List<BluetoothService> services = await device.discoverServices();
-      BluetoothService? targetService;
-      for (var s in services) {
-        if (s.uuid.toString() == SERVICE_UUID) {
-          targetService = s;
-          break;
-        }
-      }
-
-      if (targetService == null) throw Exception("Service not found");
-
-      for (var char in targetService.characteristics) {
-        if (char.uuid.toString() == CHAR_STATE_UUID) {
-          await char.setNotifyValue(true);
-          char.lastValueStream.listen((value) {
-            if (value.isNotEmpty) {
-              try {
-                final jsonStr = utf8.decode(value);
-                final map = jsonDecode(jsonStr);
-                deviceState = DeviceState.fromJson(map);
-                
-                // Throttle UI updates for raw sensor data unless it's critical
-                final now = DateTime.now();
-                if (now.difference(_lastStateNotify).inMilliseconds > 200 || 
-                    deviceState!.wifiConnected || 
-                    deviceState!.session != "DRYING") {
-                  _lastStateNotify = now;
-                  notifyListeners();
-                }
-              } catch (e) {}
-            }
-          });
-        } else if (char.uuid.toString() == CHAR_ACK_UUID) {
-          await char.setNotifyValue(true);
-          char.onValueReceived.listen((value) {
-            if (value.isNotEmpty) {
-              lastAck = utf8.decode(value);
-              developer.log("BLE ACK decoded: $lastAck");
-              _ackStreamController.add(lastAck!);
-              
-              try {
-                final Map<String, dynamic> map = jsonDecode(lastAck!);
-                if (map.containsKey('cmd') && 
-                    (map['cmd'] == 'WIFI_CONNECT_RESULT' || map['cmd'] == 'WIFI_SCAN_RESULT')) {
-                  _wifiResultStreamController.add(map);
-                }
-              } catch (e) {
-                developer.log("Error parsing ACK JSON: $e");
-              }
-              notifyListeners();
-            }
-          });
-        } else if (char.uuid.toString() == CHAR_CMD_UUID) {
-          _cmdChar = char;
-        }
-      }
-
-      device.connectionState.listen((state) {
-        if (state == BluetoothConnectionState.disconnected) {
-          status = BleConnectionStatus.disconnected;
-          _device = null;
-          _cmdChar = null;
-          deviceState = null;
-          notifyListeners();
-        }
-      });
-
-      status = BleConnectionStatus.connected;
-      notifyListeners();
-      return true;
+      // 15-second overall timeout for the connection sequence
+      return await _connectSequence(device).timeout(const Duration(seconds: 15));
     } catch (e) {
-      developer.log("Connect error: $e");
+      developer.log("Connect error or timeout: $e");
       await disconnect();
       return false;
     }
+  }
+
+  Future<bool> _connectSequence(BluetoothDevice device) async {
+    await stopScan();
+    await Future.delayed(const Duration(milliseconds: 200));
+    
+    await device.connect(autoConnect: false);
+    _device = device;
+
+    await Future.delayed(const Duration(milliseconds: 300));
+
+    try {
+      await device.requestMtu(256).timeout(const Duration(seconds: 3));
+      developer.log("BLE: Requested 256 MTU");
+    } catch (e) {
+      developer.log("MTU request failed or timed out: $e");
+    }
+
+    try {
+      if (Platform.isAndroid) {
+          await device.requestConnectionPriority(connectionPriorityRequest: ConnectionPriority.high).timeout(const Duration(seconds: 2));
+          developer.log("BLE: Requested High Priority Connection");
+      }
+    } catch (e) {
+      developer.log("Priority request error: $e");
+    }
+
+    List<BluetoothService> services = await device.discoverServices().timeout(const Duration(seconds: 5));
+    BluetoothService? targetService;
+    for (var s in services) {
+      if (s.uuid.toString() == serviceUuid) {
+        targetService = s;
+        break;
+      }
+    }
+
+    if (targetService == null) throw Exception("Service not found");
+
+    for (var char in targetService.characteristics) {
+      if (char.uuid.toString() == charStateUuid) {
+        await char.setNotifyValue(true).timeout(const Duration(seconds: 2));
+        char.lastValueStream.listen((value) {
+          if (value.isNotEmpty) {
+            try {
+              final jsonStr = utf8.decode(value);
+              final map = jsonDecode(jsonStr);
+              deviceState = DeviceState.fromJson(map);
+              
+              final now = DateTime.now();
+              if (now.difference(_lastStateNotify).inMilliseconds > 200 || 
+                  deviceState!.wifiConnected || 
+                  deviceState!.session != "DRYING") {
+                _lastStateNotify = now;
+                notifyListeners();
+              }
+            } catch (e) {
+              developer.log("Parse state error: $e");
+            }
+          }
+        });
+      } else if (char.uuid.toString() == charAckUuid) {
+        await char.setNotifyValue(true).timeout(const Duration(seconds: 2));
+        char.onValueReceived.listen((value) {
+          if (value.isNotEmpty) {
+            try {
+              final fragment = utf8.decode(value);
+              _ackBuffer += fragment;
+              developer.log("BLE Fragment [${value.length} bytes]: $fragment");
+              
+              // Try to decode the accumulated buffer
+              // We check if it looks like a complete JSON (starts with { and ends with })
+              // to avoid unnecessary jsonDecode calls which might be expensive if buffer is large
+              final trimmed = _ackBuffer.trim();
+              if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+                try {
+                  final Map<String, dynamic> map = jsonDecode(trimmed);
+                  lastAck = trimmed;
+                  developer.log("BLE Complete JSON decoded: ${lastAck!.length} bytes");
+                  _ackStreamController.add(lastAck!);
+                  
+                  if (map.containsKey('cmd') && 
+                      (map['cmd'] == 'WIFI_CONNECT_RESULT' || map['cmd'] == 'WIFI_SCAN_RESULT')) {
+                    _wifiResultStreamController.add(map);
+                  }
+                  
+                  _ackBuffer = ""; // Clear on success
+                  notifyListeners();
+                } catch (e) {
+                  // Not a complete/valid JSON yet despite the braces, wait for more
+                }
+              }
+            } catch (e) {
+              developer.log("Error handling BLE fragment: $e");
+              // If we get an encoding error, the buffer might be corrupted. 
+              // However, we don't clear it immediately to allow for possible recovery
+              // if it was just a partial multi-byte character at the end.
+            }
+          }
+        });
+      } else if (char.uuid.toString() == charCmdUuid) {
+        _cmdChar = char;
+      }
+    }
+
+    device.connectionState.listen((state) {
+      if (state == BluetoothConnectionState.disconnected) {
+        status = BleConnectionStatus.disconnected;
+        _device = null;
+        _cmdChar = null;
+        deviceState = null;
+        notifyListeners();
+      }
+    });
+
+    status = BleConnectionStatus.connected;
+    notifyListeners();
+    return true;
   }
 
   Future<void> requestMtu(int mtu) async {
@@ -289,6 +309,9 @@ class BleService extends ChangeNotifier {
       developer.log("Cmd error: Device not connected.");
       return false;
     }
+
+    // Clear buffer before sending new command to avoid stale data interference
+    _ackBuffer = "";
 
     try {
       final jsonStr = jsonEncode(cmd);
@@ -325,7 +348,17 @@ class BleService extends ChangeNotifier {
   Future<bool> sendWifiCredentials(String ssid, String password) =>
       sendCommand({"cmd": "SET_WIFI_CREDS", "ssid": ssid, "pass": password});
 
-  Future<bool> sendScanWifi() => sendCommand({"cmd": "SCAN_WIFI"});
+  Future<bool> sendScanWifi() async {
+    if (Platform.isAndroid && _device != null) {
+      try {
+        await _device!.requestConnectionPriority(connectionPriorityRequest: ConnectionPriority.high);
+        await Future.delayed(const Duration(milliseconds: 200));
+      } catch (e) {
+        developer.log("Priority request error before scan: $e");
+      }
+    }
+    return sendCommand({"cmd": "SCAN_WIFI"});
+  }
 
   Future<bool> sendClearWifiCreds() => sendCommand({"cmd": "CLEAR_WIFI_CREDS"});
 }

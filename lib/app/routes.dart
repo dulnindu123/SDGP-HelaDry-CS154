@@ -15,4 +15,5 @@ class AppRoutes {
   static const String cropGuide = '/crop-guide';
   static const String settings = '/settings';
   static const String editProfile = '/edit-profile';
+  static const String savedNetworks = '/saved-networks';
 }

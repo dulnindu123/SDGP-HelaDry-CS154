@@ -26,9 +26,19 @@ class SessionStore extends ChangeNotifier {
     _overTempAlert = _prefs!.getBool('overTempAlert') ?? true;
     _lowBatteryAlert = _prefs!.getBool('lowBatteryAlert') ?? true;
     _sensorFaultAlert = _prefs!.getBool('sensorFaultAlert') ?? true;
-    // We only load user profile if not empty in prefs
+    
+    // Load persisted session data
     _userName = _prefs!.getString('userName') ?? _userName;
     _userEmail = _prefs!.getString('userEmail') ?? _userEmail;
+    _connectionMode = _prefs!.getString('connectionMode') ?? '';
+    _pairedDeviceId = _prefs!.getString('pairedDeviceId') ?? '';
+    _pairedDeviceName = _prefs!.getString('pairedDeviceName') ?? '';
+    
+    // Automatically start listening if we have a device
+    if (_pairedDeviceId.isNotEmpty) {
+      startListeningToMetrics(_pairedDeviceId);
+    }
+    
     notifyListeners();
   }
 
@@ -131,9 +141,12 @@ class SessionStore extends ChangeNotifier {
     _heaterOn = false;
     _targetTemp = 55;
 
-    // Clear persisted user data so a new login doesn't see stale values
+    // Clear persisted session data
     _prefs?.remove('userName');
     _prefs?.remove('userEmail');
+    _prefs?.remove('connectionMode');
+    _prefs?.remove('pairedDeviceId');
+    _prefs?.remove('pairedDeviceName');
 
     stopListeningToMetrics();
 
@@ -143,6 +156,7 @@ class SessionStore extends ChangeNotifier {
   // Connection
   void setConnectionMode(String mode) {
     _connectionMode = mode;
+    _prefs?.setString('connectionMode', mode);
     notifyListeners();
   }
 
@@ -150,6 +164,10 @@ class SessionStore extends ChangeNotifier {
     _pairedDeviceId = id;
     _pairedDeviceName = name;
     debugPrint("SessionStore: Linked Device ID - $_pairedDeviceId");
+
+    // Persist
+    _prefs?.setString('pairedDeviceId', id);
+    _prefs?.setString('pairedDeviceName', name);
 
     // Start listening to metrics when a device is paired
     startListeningToMetrics(id);

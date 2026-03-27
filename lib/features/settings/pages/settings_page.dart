@@ -2,12 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../services/session_store.dart';
-import '../../../services/wifi_credential_service.dart';
 import '../../../theme/theme_controller.dart';
 import '../../../app/routes.dart';
 import '../../../app/mock_data.dart';
 import '../../../widgets/app_card.dart';
-import '../../../widgets/primary_button.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -17,21 +15,14 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  final _tempOffsetController = TextEditingController(text: '0.0');
-  final _humidityOffsetController = TextEditingController(text: '0.0');
 
   @override
   void initState() {
     super.initState();
-    final session = context.read<SessionStore>();
-    _tempOffsetController.text = session.tempOffset.toString();
-    _humidityOffsetController.text = session.humidityOffset.toString();
   }
 
   @override
   void dispose() {
-    _tempOffsetController.dispose();
-    _humidityOffsetController.dispose();
     super.dispose();
   }
 
@@ -40,12 +31,10 @@ class _SettingsPageState extends State<SettingsPage> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final themeController = context.watch<ThemeController>();
     final session = context.watch<SessionStore>();
-    final accentColor = isDark
-        ? const Color(0xFF00D4AA)
-        : const Color(0xFF1976D2);
-    final subtextColor = isDark
-        ? const Color(0xFF8892B0)
-        : const Color(0xFF64748B);
+    final accentColor =
+        isDark ? const Color(0xFF00D4AA) : const Color(0xFF1976D2);
+    final subtextColor =
+        isDark ? const Color(0xFF8892B0) : const Color(0xFF64748B);
 
     return Scaffold(
       appBar: AppBar(
@@ -170,47 +159,6 @@ class _SettingsPageState extends State<SettingsPage> {
             const Divider(),
             const SizedBox(height: 16),
 
-            // ── Connection Mode ──
-            _sectionTitle('Connection Mode', isDark),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('Current Mode'),
-                Text(
-                  session.connectionMode.isNotEmpty
-                      ? session.connectionMode[0].toUpperCase() +
-                            session.connectionMode.substring(1)
-                      : 'Offline',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: accentColor,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: () {
-                  Navigator.of(
-                    context,
-                  ).pushReplacementNamed(AppRoutes.connectionMode);
-                },
-                icon: const Icon(Icons.swap_horiz),
-                label: const Text('Change Connection Mode'),
-                style: OutlinedButton.styleFrom(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            const Divider(),
-            const SizedBox(height: 16),
-
             // ── Device ──
             _sectionTitle('Device', isDark),
             const SizedBox(height: 8),
@@ -222,18 +170,23 @@ class _SettingsPageState extends State<SettingsPage> {
                     children: [
                       _buildDeviceInfoRow(
                         'Device ID:',
-                        session.pairedDeviceId.isNotEmpty ? session.pairedDeviceId : 'Not Paired',
+                        session.pairedDeviceId.isNotEmpty
+                            ? session.pairedDeviceId
+                            : 'Not Paired',
                         subtextColor,
                       ),
                       _buildDeviceInfoRow(
                         'Name:',
-                        session.pairedDeviceName.isNotEmpty ? session.pairedDeviceName : MockData.defaultDeviceName,
+                        session.pairedDeviceName.isNotEmpty
+                            ? session.pairedDeviceName
+                            : MockData.defaultDeviceName,
                         subtextColor,
                       ),
                       _buildDeviceInfoRow(
                         'Status:',
                         session.connectionMode.isNotEmpty
-                            ? session.connectionMode[0].toUpperCase() + session.connectionMode.substring(1)
+                            ? session.connectionMode[0].toUpperCase() +
+                                session.connectionMode.substring(1)
                             : 'Offline',
                         subtextColor,
                         valueColor: accentColor,
@@ -253,13 +206,12 @@ class _SettingsPageState extends State<SettingsPage> {
               spacing: 8,
               runSpacing: 8,
               children: [
-                _buildDeviceButton(Icons.swap_horiz, 'Change Device', context, () {
-                  Navigator.of(context).pushReplacementNamed(AppRoutes.connectionMode);
+                _buildDeviceButton(
+                    Icons.bluetooth, 'Bluetooth Configure', context, () {
+                  Navigator.of(context).pushNamed(AppRoutes.pairDevice);
                 }),
-                _buildDeviceButton(Icons.wifi, 'Manage WiFi Networks', context, () {
-                  Navigator.of(context).pushNamed(AppRoutes.wifiStep1);
-                }),
-                _buildDeviceButton(Icons.settings, 'Configure WiFi', context, () {
+                _buildDeviceButton(Icons.settings, 'Configure WiFi', context,
+                    () {
                   Navigator.of(context).pushNamed(AppRoutes.wifiStep1);
                 }),
               ],
@@ -271,53 +223,26 @@ class _SettingsPageState extends State<SettingsPage> {
             // ── Saved Networks ──
             _sectionTitle('Saved Networks', isDark),
             const SizedBox(height: 8),
-            _buildSavedNetworksSection(context, isDark, accentColor, subtextColor),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () {
+                  Navigator.of(context).pushNamed(AppRoutes.savedNetworks);
+                },
+                icon: Icon(Icons.wifi, size: 18, color: accentColor),
+                label: const Text('Manage Saved Networks'),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ),
             const SizedBox(height: 16),
             const Divider(),
             const SizedBox(height: 16),
 
-            // ── Sensor Calibration ──
-            _sectionTitle('Sensor Calibration', isDark),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Icon(Icons.tune, size: 18, color: accentColor),
-                const SizedBox(width: 8),
-              ],
-            ),
-            const SizedBox(height: 8),
-            _buildCalibrationField(
-              'Temperature Offset (°C)',
-              _tempOffsetController,
-              isDark,
-            ),
-            _buildCalibrationField(
-              'Humidity Offset (%)',
-              _humidityOffsetController,
-              isDark,
-            ),
-            const SizedBox(height: 8),
-            PrimaryButton(
-              label: 'Save Calibration',
-              onPressed: () {
-                final session = context.read<SessionStore>();
-                session.setTempOffset(
-                  double.tryParse(_tempOffsetController.text) ?? 0.0,
-                );
-                session.setHumidityOffset(
-                  double.tryParse(_humidityOffsetController.text) ?? 0.0,
-                );
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Calibration saved!'),
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: 16),
-            const Divider(),
-            const SizedBox(height: 16),
 
             // ── Notifications ──
             _sectionTitle('Notifications', isDark),
@@ -405,12 +330,13 @@ class _SettingsPageState extends State<SettingsPage> {
               child: OutlinedButton(
                 onPressed: () async {
                   // NEW: Added Firebase Sign Out logic
-                  await FirebaseAuth.instance.signOut(); 
+                  await FirebaseAuth.instance.signOut();
                   session.logout();
-                  if (mounted) {
+                  if (context.mounted) {
                     Navigator.of(
                       context,
-                    ).pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
+                    ).pushNamedAndRemoveUntil(
+                        AppRoutes.login, (route) => false);
                   }
                 },
                 style: OutlinedButton.styleFrom(
@@ -434,7 +360,7 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   // ... (All other helper methods like _sectionTitle, _buildDeviceInfoRow, etc. remain exactly as you provided)
-  
+
   Widget _sectionTitle(String title, bool isDark) {
     return Text(
       title,
@@ -444,93 +370,6 @@ class _SettingsPageState extends State<SettingsPage> {
         color: isDark ? const Color(0xFFE6F1FF) : const Color(0xFF1A2D4D),
       ),
     );
-  }
-
-  Widget _buildSavedNetworksSection(BuildContext context, bool isDark, Color accentColor, Color subtextColor) {
-    final session = context.watch<SessionStore>();
-    final networks = session.fullSavedNetworks;
-    
-    if (networks.isEmpty) {
-      return Text('No saved networks.', style: TextStyle(color: subtextColor, fontSize: 13));
-    }
-    
-    return Column(
-      children: [
-        ...networks.map((net) {
-          final daysAgo = DateTime.now().difference(net.lastUsed).inDays;
-          final timeStr = daysAgo == 0 ? 'Today' : (daysAgo == 1 ? 'Yesterday' : '$daysAgo days ago');
-          
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: AppCard(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              child: Row(
-              children: [
-                Icon(Icons.wifi, color: accentColor),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(net.ssid, style: const TextStyle(fontWeight: FontWeight.bold)),
-                      Text('Last used: $timeStr', style: TextStyle(fontSize: 12, color: subtextColor)),
-                    ],
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
-                  onPressed: () => _forgetNetwork(net),
-                ),
-              ],
-            ),
-            ),
-          );
-        }),
-        const SizedBox(height: 8),
-        SizedBox(
-          width: double.infinity,
-          child: OutlinedButton(
-            onPressed: () => _clearAllNetworks(),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.redAccent,
-              side: const BorderSide(color: Colors.redAccent),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-            child: const Text('Clear All Saved Networks'),
-          ),
-        ),
-      ],
-    );
-  }
-
-  void _forgetNetwork(SavedNetwork net) async {
-    final userId = FirebaseAuth.instance.currentUser?.uid;
-    if (userId != null) {
-      final wifiService = WifiCredentialService();
-      await wifiService.forgetNetwork(net.ssid, net.deviceId, userId);
-      
-      if (mounted) {
-        final session = context.read<SessionStore>();
-        if (session.pairedDeviceId.isNotEmpty) {
-          await session.loadSavedNetworks(session.pairedDeviceId);
-        }
-      }
-    }
-  }
-
-  void _clearAllNetworks() async {
-    final userId = FirebaseAuth.instance.currentUser?.uid;
-    if (userId != null) {
-      final wifiService = WifiCredentialService();
-      await wifiService.clearAll(userId);
-      
-      if (mounted) {
-        final session = context.read<SessionStore>();
-        if (session.pairedDeviceId.isNotEmpty) {
-          await session.loadSavedNetworks(session.pairedDeviceId);
-        }
-      }
-    }
   }
 
   Widget _buildDeviceInfoRow(
@@ -565,7 +404,8 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Widget _buildDeviceButton(IconData icon, String label, BuildContext context, VoidCallback onPressed) {
+  Widget _buildDeviceButton(IconData icon, String label, BuildContext context,
+      VoidCallback onPressed) {
     return OutlinedButton.icon(
       onPressed: onPressed,
       icon: Icon(icon, size: 16),
@@ -577,38 +417,6 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Widget _buildCalibrationField(
-    String label,
-    TextEditingController controller,
-    bool isDark,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
-          ),
-          const SizedBox(height: 4),
-          SizedBox(
-            height: 44,
-            child: TextField(
-              controller: controller,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 10,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildNotificationRow(
     IconData icon,
@@ -660,9 +468,8 @@ class _SettingsPageState extends State<SettingsPage> {
     bool isDark,
     VoidCallback onTap,
   ) {
-    final accentColor = isDark
-        ? const Color(0xFF00D4AA)
-        : const Color(0xFF1976D2);
+    final accentColor =
+        isDark ? const Color(0xFF00D4AA) : const Color(0xFF1976D2);
     return GestureDetector(
       onTap: onTap,
       child: Container(

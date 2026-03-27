@@ -166,7 +166,9 @@ class FirebaseDeviceService extends ChangeNotifier {
         history.sort((a, b) => b.tsMs.compareTo(a.tsMs)); // descending
       }
       notifyListeners();
-    } catch(e) {}
+    } catch(e) {
+      debugPrint("Firebase Fetch History Error: $e");
+    }
   }
 
   Future<void> setFanSpeed(int pct) async {

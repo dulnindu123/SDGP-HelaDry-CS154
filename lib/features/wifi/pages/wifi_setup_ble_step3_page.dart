@@ -37,22 +37,24 @@ class _WifiSetupBleStep3PageState extends State<WifiSetupBleStep3Page> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     
-    // [FIX] Auto-detect if device is already connected to WiFi
+    final args = ModalRoute.of(context)?.settings.arguments;
+    if (args != null && args is String) {
+      _selectedSsid = args;
+    }
+
     final ble = context.watch<BleService>();
-    
     if (ble.deviceState != null && ble.deviceState!.wifiConnected) {
        final ip = ble.deviceState!.ip;
        final deviceId = ble.deviceState!.deviceId.isNotEmpty 
            ? ble.deviceState!.deviceId 
            : context.read<SessionStore>().pairedDeviceId;
 
-       if (ip.isNotEmpty) {
+       if (ip.isNotEmpty && _selectedSsid.isEmpty) {
          context.read<ApiService>().setBaseUrl(ip);
          
-         // Auto-redirect if already connected
+         // Auto-redirect ONLY if we don't have a specific SSID to connect to
          WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) {
-              // [FIX] Activate Online Mode before redirecting
               if (deviceId.isNotEmpty) {
                 context.read<ConnectionController>().activateOnlineMode(deviceId);
               }
@@ -60,11 +62,6 @@ class _WifiSetupBleStep3PageState extends State<WifiSetupBleStep3Page> {
             }
          });
        }
-    }
-
-    final args = ModalRoute.of(context)?.settings.arguments;
-    if (args != null && args is String) {
-      _selectedSsid = args;
     }
     if (_selectedSsid.isEmpty) {
       _selectedSsid = 'Home WiFi';
@@ -166,6 +163,7 @@ class _WifiSetupBleStep3PageState extends State<WifiSetupBleStep3Page> {
           
           final status = data['status'];
           if (status == 'connected') {
+            if (!mounted) return;
             final ip = data['ip'] ?? '';
             
             // [FIX] Update ApiService with the real IP reported by the device
@@ -192,6 +190,7 @@ class _WifiSetupBleStep3PageState extends State<WifiSetupBleStep3Page> {
               }
               
               try {
+                if (!mounted) return;
                 final fbDeviceService = context.read<FirebaseDeviceService>();
                 await fbDeviceService.writeWifiConfig(effectiveSsid, ip);
               } catch (e) {

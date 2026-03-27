@@ -14,19 +14,14 @@ class ConnectionModePage extends StatefulWidget {
 }
 
 class _ConnectionModePageState extends State<ConnectionModePage> {
-  String _selectedMode = '';
+  String _selectedMode = 'online';
 
   void _handleContinue() {
-    if (_selectedMode.isEmpty) return;
     final session = context.read<SessionStore>();
     session.setConnectionMode(_selectedMode);
 
-    if (_selectedMode == 'offline') {
-      Navigator.of(context).pushNamed(AppRoutes.pairDevice);
-    } else {
-      // Online mode: go to Pair Device first, then Wi-Fi setup
-      Navigator.of(context).pushNamed(AppRoutes.pairDevice);
-    }
+    // Online mode: go to Pair Device first, then Wi-Fi setup
+    Navigator.of(context).pushNamed(AppRoutes.pairDevice);
   }
 
   @override
@@ -74,7 +69,7 @@ class _ConnectionModePageState extends State<ConnectionModePage> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Choose how you want to connect to\nyour device',
+                'Connect to your device online',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: subtextColor),
               ),
@@ -167,107 +162,12 @@ class _ConnectionModePageState extends State<ConnectionModePage> {
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
-
-              // Offline Mode card
-              AppCard(
-                isSelected: _selectedMode == 'offline',
-                onTap: () => setState(() => _selectedMode = 'offline'),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFFFFA726), Color(0xFFFF8F00)],
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.bluetooth,
-                        color: Colors.white,
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'Offline Mode',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Direct Bluetooth connection without internet',
-                      style: TextStyle(color: subtextColor, fontSize: 14),
-                    ),
-                    const SizedBox(height: 16),
-                    _buildFeatureItem(
-                      Icons.bluetooth,
-                      'BLE Control',
-                      'Direct device connection',
-                      isDark,
-                    ),
-                    const SizedBox(height: 8),
-                    _buildFeatureItem(
-                      Icons.check_circle,
-                      'No WiFi Needed',
-                      'Works anywhere',
-                      isDark,
-                    ),
-                    const SizedBox(height: 8),
-                    _buildFeatureItem(
-                      Icons.storage,
-                      'Local Storage',
-                      'Data saved on device',
-                      isDark,
-                    ),
-                    const SizedBox(height: 12),
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: isDark
-                            ? const Color(0xFF0D2137)
-                            : const Color(0xFFFFF3E0),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.info_outline,
-                            size: 16,
-                            color: isDark
-                                ? const Color(0xFFFFA726)
-                                : const Color(0xFFE65100),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              'Only works within Bluetooth range (~10 meters)',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: subtextColor,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 32),
 
               // Continue button
               PrimaryButton(
-                label: _selectedMode.isEmpty
-                    ? 'Select a mode to continue'
-                    : _selectedMode == 'online'
-                    ? 'Continue with Online Mode'
-                    : 'Continue with Offline Mode',
-                onPressed: _selectedMode.isEmpty ? null : _handleContinue,
+                label: 'Continue with Online Mode',
+                onPressed: _handleContinue,
               ),
               const SizedBox(height: 12),
 

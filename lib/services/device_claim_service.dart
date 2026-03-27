@@ -10,9 +10,9 @@ class DeviceClaimService {
     if (user == null) return false;
 
     try {
-      final snapshot = await _db.child('devices').child(deviceId).child('owner').get();
+      final snapshot = await _db.child('devices').child(deviceId).child('owner').get().timeout(const Duration(seconds: 10));
       if (!snapshot.exists || snapshot.value == null || snapshot.value == "") {
-        await _db.child('devices').child(deviceId).child('owner').set(user.uid);
+        await _db.child('devices').child(deviceId).child('owner').set(user.uid).timeout(const Duration(seconds: 10));
         return true;
       }
       return snapshot.value == user.uid;

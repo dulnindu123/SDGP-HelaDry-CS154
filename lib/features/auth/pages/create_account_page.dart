@@ -41,8 +41,8 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
 
     try {
       // 1. Create user in Firebase
-      final UserCredential userCredential = await FirebaseAuth.instance
-          .createUserWithEmailAndPassword(
+      final UserCredential userCredential =
+          await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
@@ -61,7 +61,6 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
 
       // 4. Navigate to success screen
       Navigator.of(context).pushReplacementNamed(AppRoutes.connectionMode);
-
     } on FirebaseAuthException catch (e) {
       String message = 'Failed to create account.';
 

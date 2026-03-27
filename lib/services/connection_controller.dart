@@ -79,7 +79,9 @@ class ConnectionController extends ChangeNotifier {
         final savedMode = session.connectionMode as String;
         if (savedMode == 'online') {
           activateOnlineMode(pairedId);
-        } else if (savedMode == 'offline') mode = ConnectionMode.offline;
+        } else if (savedMode == 'offline') {
+          mode = ConnectionMode.offline;
+        }
       }
       notifyListeners();
     }

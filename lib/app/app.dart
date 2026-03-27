@@ -28,6 +28,8 @@ import '../features/guide/pages/crop_guide_page.dart';
 import '../features/settings/pages/settings_page.dart';
 import '../features/settings/pages/edit_profile_page.dart';
 
+import '../features/settings/pages/saved_networks_page.dart';
+
 class HelaDryApp extends StatelessWidget {
   const HelaDryApp({super.key});
 
@@ -60,6 +62,7 @@ class HelaDryApp extends StatelessWidget {
           AppRoutes.cropGuide: (_) => const CropGuidePage(),
           AppRoutes.settings: (_) => const SettingsPage(),
           AppRoutes.editProfile: (_) => const EditProfilePage(),
+          AppRoutes.savedNetworks: (_) => const SavedNetworksPage(),
         };
 
         final builder = routes[settings.name];

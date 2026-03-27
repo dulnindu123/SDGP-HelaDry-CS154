@@ -43,6 +43,7 @@ class _DashboardPageState extends State<DashboardPage> {
     try {
       final user = FirebaseAuth.instance.currentUser;
       final token = await user?.getIdToken();
+      if (!mounted) return;
       final api = context.read<ApiService>();
       final baseUrl = api.baseUrl;
       final response = await http.get(

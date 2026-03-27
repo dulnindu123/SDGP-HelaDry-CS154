@@ -41,23 +41,25 @@ class _SplashPageState extends State<SplashPage>
   Future<void> _navigate() async {
     await Future.delayed(const Duration(milliseconds: 2200));
     if (!mounted) return;
-    
+
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       final session = context.read<SessionStore>();
-      
+
       // Update session with user info
-      final currentName = (user.displayName != null && user.displayName!.isNotEmpty) 
-          ? user.displayName! 
-          : session.userName;
-      final currentEmail = (user.email != null && user.email!.isNotEmpty) 
-          ? user.email! 
+      final currentName =
+          (user.displayName != null && user.displayName!.isNotEmpty)
+              ? user.displayName!
+              : session.userName;
+      final currentEmail = (user.email != null && user.email!.isNotEmpty)
+          ? user.email!
           : session.userEmail;
-      
+
       session.login(name: currentName, email: currentEmail);
 
       // Check if we already have a paired device and connection mode
-      if (session.connectionMode.isNotEmpty && session.pairedDeviceId.isNotEmpty) {
+      if (session.connectionMode.isNotEmpty &&
+          session.pairedDeviceId.isNotEmpty) {
         // Already set up, go straight to dashboard
         Navigator.of(context).pushReplacementNamed(AppRoutes.dashboard);
       } else {

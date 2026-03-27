@@ -49,7 +49,7 @@ class _WifiSetupBleStep1PageState extends State<WifiSetupBleStep1Page> {
       final results = ble.scanResults.where((r) =>
           (r.device.platformName.isNotEmpty
                   ? r.device.platformName
-                  : r.advertisementData.localName) ==
+                  : r.advertisementData.advName) ==
               targetId ||
           r.device.remoteId.str == targetId);
 
@@ -244,7 +244,7 @@ class _WifiSetupBleStep1PageState extends State<WifiSetupBleStep1Page> {
                                         size: 20, color: Colors.blue),
                                     title: Text(r.device.platformName.isNotEmpty
                                         ? r.device.platformName
-                                        : r.advertisementData.localName),
+                                        : r.advertisementData.advName),
                                     trailing: const Icon(Icons.link, size: 20),
                                     onTap: () => _performConnect(r.device),
                                   )),

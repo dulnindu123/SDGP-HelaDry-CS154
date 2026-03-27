@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/foundation.dart';
 
 class SavedNetwork {
   final String ssid;
@@ -122,7 +123,7 @@ class WifiCredentialService {
         return list;
       }
     } catch (e) {
-      print("Error fetching from Firebase: $e");
+      debugPrint("Error fetching from Firebase: $e");
     }
     
     final locals = await _getLocalNetworks();

@@ -25,18 +25,39 @@ class _PairDevicePageState extends State<PairDevicePage> {
   bool _troubleshootExpanded = false;
 
   void _startScan() async {
-    final Map<Permission, PermissionStatus> statuses = await [
+    // [FIX] More robust permission handling for different Android versions
+    final statuses = await [
+      Permission.bluetooth,
       Permission.bluetoothScan,
       Permission.bluetoothConnect,
       Permission.locationWhenInUse,
     ].request();
 
-    if (statuses.values.any((status) => status.isDenied)) {
+    bool isGranted = true;
+    
+    // For Android 12+ (API 31+), we need scan and connect
+    // For older versions, we need location and basic bluetooth
+    // permission_handler mostly handles this, but we should be careful with "denied"
+    
+    final scanDenied = statuses[Permission.bluetoothScan]?.isDenied ?? false;
+    final connectDenied = statuses[Permission.bluetoothConnect]?.isDenied ?? false;
+    final locationDenied = statuses[Permission.locationWhenInUse]?.isDenied ?? false;
+
+    if (scanDenied || connectDenied || locationDenied) {
+      isGranted = false;
+    }
+
+    if (!isGranted) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Permissions required to scan for Bluetooth devices.'),
+        SnackBar(
+          content: const Text('Bluetooth & Location permissions are required to find HelaDry devices. Please enable them in Settings.'),
           backgroundColor: Colors.orange,
+          action: SnackBarAction(
+            label: 'Settings',
+            textColor: Colors.white,
+            onPressed: () => openAppSettings(),
+          ),
         ),
       );
       return;
@@ -46,7 +67,7 @@ class _PairDevicePageState extends State<PairDevicePage> {
     context.read<BleService>().startScan();
   }
 
-  void _connectToDevice(final device) async {
+  void _connectToDevice(final dynamic device) async {
     setState(() => _isConnecting = true);
 
     try {
@@ -56,9 +77,9 @@ class _PairDevicePageState extends State<PairDevicePage> {
       if (!mounted) return;
 
       if (success) {
-        // [FIX A3] Wait up to 10 seconds (50 * 200ms) for the first state update for safety
+        // [FIX] Wait up to 4 seconds (20 * 200ms) for the first state update
         String realDeviceId = "";
-        for (int i = 0; i < 50; i++) {
+        for (int i = 0; i < 20; i++) {
           await Future.delayed(const Duration(milliseconds: 200));
           if (ble.deviceState != null && ble.deviceState!.deviceId.isNotEmpty) {
             realDeviceId = ble.deviceState!.deviceId;
@@ -67,6 +88,7 @@ class _PairDevicePageState extends State<PairDevicePage> {
           }
         }
 
+        if (!mounted) return;
         final session = context.read<SessionStore>();
         // Use the real device ID from the firmware if available, otherwise fallback to platform name
         final finalId =
@@ -95,6 +117,7 @@ class _PairDevicePageState extends State<PairDevicePage> {
 
         // Initialize Firebase listener with the device ID
         try {
+          if (!mounted) return;
           final fbService = context.read<FirebaseDeviceService>();
           fbService.setDeviceId(finalId);
         } catch (e) {
@@ -107,6 +130,7 @@ class _PairDevicePageState extends State<PairDevicePage> {
             ? session.connectionMode
             : 'offline';
         session.setConnectionMode(modeToSet);
+        if (!mounted) return;
         context.read<ConnectionController>().setMode(modeToSet);
 
         Navigator.of(context).pushReplacementNamed(AppRoutes.pairSuccess);
@@ -289,14 +313,16 @@ class _PairDevicePageState extends State<PairDevicePage> {
     );
   }
 
-  Widget _buildDeviceItem(final result, bool isDark) {
+  Widget _buildDeviceItem(final dynamic result, bool isDark) {
     final accentColor =
         isDark ? const Color(0xFF00D4AA) : const Color(0xFF1976D2);
 
     Color qualityColor = const Color(0xFF4CAF50);
     if (result.rssi < -80) {
       qualityColor = const Color(0xFFEF5350);
-    } else if (result.rssi < -60) qualityColor = const Color(0xFFFFA726);
+    } else if (result.rssi < -60) {
+      qualityColor = const Color(0xFFFFA726);
+    }
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
