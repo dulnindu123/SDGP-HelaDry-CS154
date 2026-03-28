@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-// COMMIT MESSAGE: feat: add status dot indicators on days with batches
+
 
 class CalendarPage extends StatefulWidget {
   const CalendarPage({super.key});
