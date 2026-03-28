@@ -244,36 +244,6 @@ class _SettingsPageState extends State<SettingsPage> {
             const SizedBox(height: 16),
 
 
-            // ── Notifications ──
-            _sectionTitle('Notifications', isDark),
-            const SizedBox(height: 8),
-            _buildNotificationRow(
-              Icons.warning,
-              'Over Temperature',
-              'Alert when temp exceeds limit',
-              session.overTempAlert,
-              const Color(0xFFEF5350),
-              (v) => session.setOverTempAlert(v),
-            ),
-            _buildNotificationRow(
-              Icons.battery_alert,
-              'Low Battery',
-              'Alert when battery is low',
-              session.lowBatteryAlert,
-              const Color(0xFFFFA726),
-              (v) => session.setLowBatteryAlert(v),
-            ),
-            _buildNotificationRow(
-              Icons.error,
-              'Sensor Fault',
-              'Alert on sensor errors',
-              session.sensorFaultAlert,
-              accentColor,
-              (v) => session.setSensorFaultAlert(v),
-            ),
-            const SizedBox(height: 16),
-            const Divider(),
-            const SizedBox(height: 16),
 
             // ── Units ──
             _sectionTitle('Units', isDark),
@@ -418,49 +388,6 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
 
-  Widget _buildNotificationRow(
-    IconData icon,
-    String title,
-    String subtitle,
-    bool value,
-    Color iconColor,
-    ValueChanged<bool> onChanged,
-  ) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        children: [
-          Icon(icon, size: 18, color: iconColor),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                  ),
-                ),
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: isDark
-                        ? const Color(0xFF8892B0)
-                        : const Color(0xFF64748B),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Switch(value: value, onChanged: onChanged),
-        ],
-      ),
-    );
-  }
 
   Widget _buildUnitButton(
     String label,
