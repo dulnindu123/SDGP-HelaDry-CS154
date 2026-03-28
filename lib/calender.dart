@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-
+// COMMIT MESSAGE: feat: add status dot indicators on days with batches
 
 class CalendarPage extends StatefulWidget {
   const CalendarPage({super.key});
@@ -132,6 +132,8 @@ class _CalendarPageState extends State<CalendarPage> {
             final day        = DateTime(_focusedMonth.year, _focusedMonth.month, dayNum);
             final isToday    = _isSameDay(day, DateTime.now());
             final isSelected = _selectedDay != null && _isSameDay(day, _selectedDay!);
+            final dayEvents  = _eventsForDay(day);
+            final hasEvent   = dayEvents.isNotEmpty;
             return Expanded(
               child: GestureDetector(
                 onTap: () => setState(() => _selectedDay = day),
@@ -142,13 +144,25 @@ class _CalendarPageState extends State<CalendarPage> {
                     borderRadius: BorderRadius.circular(10),
                     border: isToday && !isSelected ? Border.all(color: _accent(isDark), width: 1.5) : null,
                   ),
-                  child: Center(
-                    child: Text('\$dayNum', style: TextStyle(
+                  child: Stack(alignment: Alignment.center, children: [
+                    Text('\$dayNum', style: TextStyle(
                       fontSize: 14,
                       fontWeight: isToday || isSelected ? FontWeight.bold : FontWeight.normal,
                       color: isSelected ? (isDark ? const Color(0xFF0B1120) : Colors.white) : _text(isDark),
                     )),
-                  ),
+                    if (hasEvent && !isSelected)
+                      Positioned(
+                        bottom: 5,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: dayEvents.take(2).map((e) => Container(
+                            width: 5, height: 5,
+                            margin: const EdgeInsets.symmetric(horizontal: 1),
+                            decoration: BoxDecoration(color: _statusColor(e.status), shape: BoxShape.circle),
+                          )).toList(),
+                        ),
+                      ),
+                  ]),
                 ),
               ),
             );
