@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-// dummy data
+// find events by day
 
 class CalendarPage extends StatefulWidget {
   const CalendarPage({super.key});
@@ -73,6 +73,19 @@ class _CalendarPageState extends State<CalendarPage> {
       targetTemp: 55,
     ),
   ];
+
+  // ── helpers ──────────────────────────────────
+
+  List<BatchEvent> _eventsForDay(DateTime day) {
+    return _events.where((e) {
+      final start = DateTime(e.start.year, e.start.month, e.start.day);
+      final end = DateTime(e.end.year, e.end.month, e.end.day);
+      final d = DateTime(day.year, day.month, day.day);
+      return !d.isBefore(start) && !d.isAfter(end);
+    }).toList();
+  }
+
+  bool _hasEvent(DateTime day) => _eventsForDay(day).isNotEmpty;
 
   @override
   Widget build(BuildContext context) {
