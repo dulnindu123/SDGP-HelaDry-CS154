@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 
+
 class CalendarPage extends StatefulWidget {
   const CalendarPage({super.key});
   @override
@@ -228,6 +229,12 @@ class _CalendarPageState extends State<CalendarPage> {
 
   Widget _buildEventCard(BatchEvent e, bool isDark) {
     final statusColor = _statusColor(e.status);
+    final isActive    = e.status == 'Active';
+    final remaining   = e.end.difference(DateTime.now());
+    final total       = e.end.difference(e.start).inMinutes;
+    final elapsed     = DateTime.now().difference(e.start).inMinutes;
+    final progress    = isActive ? (elapsed / total).clamp(0.0, 1.0) : 1.0;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -250,6 +257,23 @@ class _CalendarPageState extends State<CalendarPage> {
             child: Text(e.status, style: TextStyle(color: statusColor, fontSize: 11, fontWeight: FontWeight.w600)),
           ),
         ]),
+        if (isActive) ...[
+          const SizedBox(height: 12),
+          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+            Text('Progress', style: TextStyle(fontSize: 12, color: _subtext(isDark))),
+            Text('\${(progress * 100).toStringAsFixed(0)}%', style: TextStyle(fontSize: 12, color: _accent(isDark), fontWeight: FontWeight.bold)),
+          ]),
+          const SizedBox(height: 6),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: LinearProgressIndicator(value: progress, minHeight: 8, backgroundColor: _border(isDark), valueColor: AlwaysStoppedAnimation<Color>(_accent(isDark))),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            remaining.isNegative ? 'Overdue — check device' : 'Ends in \${_formatDuration(remaining)}',
+            style: TextStyle(fontSize: 12, color: remaining.isNegative ? const Color(0xFFEF4444) : _accent(isDark), fontWeight: FontWeight.w600),
+          ),
+        ],
         const SizedBox(height: 10),
         Row(children: [
           Icon(Icons.play_arrow_rounded, size: 14, color: _subtext(isDark)),
