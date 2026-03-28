@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-// find events by day
+// add date formatting and comparison helpers
 
 class CalendarPage extends StatefulWidget {
   const CalendarPage({super.key});
@@ -86,6 +86,22 @@ class _CalendarPageState extends State<CalendarPage> {
   }
 
   bool _hasEvent(DateTime day) => _eventsForDay(day).isNotEmpty;
+
+  bool _isSameDay(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month && a.day == b.day;
+
+  String _formatDate(DateTime d) {
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    ];
+    return '${d.day} ${months[d.month - 1]} ${d.year}';
+  }
+
+  String _formatDuration(Duration d) {
+    if (d.inHours >= 1) return '${d.inHours}h ${d.inMinutes.remainder(60)}m';
+    return '${d.inMinutes}m';
+  }
 
   @override
   Widget build(BuildContext context) {
