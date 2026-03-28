@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-// COMMIT MESSAGE: feat: add CalendarPage stateful widget scaffold
+// dummy data
 
 class CalendarPage extends StatefulWidget {
   const CalendarPage({super.key});
@@ -16,7 +16,63 @@ class _CalendarPageState extends State<CalendarPage> {
 
   final List<String> _filterOptions = ['All', 'Active', 'Completed', 'Scheduled'];
 
-  final List<BatchEvent> _events = [];
+  final List<BatchEvent> _events = [
+    BatchEvent(
+      id: 'BATCH-001',
+      crop: 'Mango',
+      emoji: '🥭',
+      start: DateTime.now().subtract(const Duration(days: 14)),
+      end: DateTime.now().subtract(const Duration(days: 12)),
+      status: 'Completed',
+      trays: 4,
+      weight: 5.0,
+      targetTemp: 60,
+    ),
+    BatchEvent(
+      id: 'BATCH-002',
+      crop: 'Tomato',
+      emoji: '🍅',
+      start: DateTime.now().subtract(const Duration(days: 8)),
+      end: DateTime.now().subtract(const Duration(days: 7)),
+      status: 'Completed',
+      trays: 3,
+      weight: 3.5,
+      targetTemp: 55,
+    ),
+    BatchEvent(
+      id: 'BATCH-003',
+      crop: 'Banana',
+      emoji: '🍌',
+      start: DateTime.now().subtract(const Duration(days: 4)),
+      end: DateTime.now().subtract(const Duration(days: 3)),
+      status: 'Completed',
+      trays: 5,
+      weight: 4.2,
+      targetTemp: 58,
+    ),
+    BatchEvent(
+      id: 'BATCH-004',
+      crop: 'Chili',
+      emoji: '🌶️',
+      start: DateTime.now().subtract(const Duration(days: 1)),
+      end: DateTime.now().add(const Duration(hours: 10)),
+      status: 'Active',
+      trays: 2,
+      weight: 1.8,
+      targetTemp: 50,
+    ),
+    BatchEvent(
+      id: 'BATCH-005',
+      crop: 'Jackfruit',
+      emoji: '🍈',
+      start: DateTime.now().add(const Duration(days: 2)),
+      end: DateTime.now().add(const Duration(days: 4)),
+      status: 'Scheduled',
+      trays: 6,
+      weight: 7.0,
+      targetTemp: 55,
+    ),
+  ];
 
   @override
   Widget build(BuildContext context) {
