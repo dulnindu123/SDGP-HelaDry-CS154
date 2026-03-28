@@ -4,6 +4,7 @@ import 'build_dehydrator_screen.dart';
 import 'my_records_screen.dart';
 import 'start_batch_screen.dart';
 import 'drying_report_screen.dart';
+import 'calender.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -37,7 +38,13 @@ class DashboardScreen extends StatelessWidget {
                 ),
                 Row(
                   children: [
-                    IconButton(icon: const Icon(Icons.calendar_today, color: Colors.white), onPressed: () {}),
+                    IconButton(
+                      icon: const Icon(Icons.calendar_today, color: Colors.white),
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const CalendarPage()),
+                      ),
+                    ),
                     IconButton(icon: const Icon(Icons.settings, color: Colors.white), onPressed: () {}),
                   ],
                 )
