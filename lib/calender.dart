@@ -17,61 +17,11 @@ class _CalendarPageState extends State<CalendarPage> {
   final List<String> _filterOptions = ['All', 'Active', 'Completed', 'Scheduled'];
 
   final List<BatchEvent> _events = [
-    BatchEvent(
-      id: 'BATCH-001',
-      crop: 'Mango',
-      emoji: '🥭',
-      start: DateTime.now().subtract(const Duration(days: 14)),
-      end: DateTime.now().subtract(const Duration(days: 12)),
-      status: 'Completed',
-      trays: 4,
-      weight: 5.0,
-      targetTemp: 60,
-    ),
-    BatchEvent(
-      id: 'BATCH-002',
-      crop: 'Tomato',
-      emoji: '🍅',
-      start: DateTime.now().subtract(const Duration(days: 8)),
-      end: DateTime.now().subtract(const Duration(days: 7)),
-      status: 'Completed',
-      trays: 3,
-      weight: 3.5,
-      targetTemp: 55,
-    ),
-    BatchEvent(
-      id: 'BATCH-003',
-      crop: 'Banana',
-      emoji: '🍌',
-      start: DateTime.now().subtract(const Duration(days: 4)),
-      end: DateTime.now().subtract(const Duration(days: 3)),
-      status: 'Completed',
-      trays: 5,
-      weight: 4.2,
-      targetTemp: 58,
-    ),
-    BatchEvent(
-      id: 'BATCH-004',
-      crop: 'Chili',
-      emoji: '🌶️',
-      start: DateTime.now().subtract(const Duration(days: 1)),
-      end: DateTime.now().add(const Duration(hours: 10)),
-      status: 'Active',
-      trays: 2,
-      weight: 1.8,
-      targetTemp: 50,
-    ),
-    BatchEvent(
-      id: 'BATCH-005',
-      crop: 'Jackfruit',
-      emoji: '🍈',
-      start: DateTime.now().add(const Duration(days: 2)),
-      end: DateTime.now().add(const Duration(days: 4)),
-      status: 'Scheduled',
-      trays: 6,
-      weight: 7.0,
-      targetTemp: 55,
-    ),
+    BatchEvent(id: 'BATCH-001', crop: 'Mango', emoji: '🥭', start: DateTime.now().subtract(const Duration(days: 14)), end: DateTime.now().subtract(const Duration(days: 12)), status: 'Completed', trays: 4, weight: 5.0, targetTemp: 60),
+    BatchEvent(id: 'BATCH-002', crop: 'Tomato', emoji: '🍅', start: DateTime.now().subtract(const Duration(days: 8)), end: DateTime.now().subtract(const Duration(days: 7)), status: 'Completed', trays: 3, weight: 3.5, targetTemp: 55),
+    BatchEvent(id: 'BATCH-003', crop: 'Banana', emoji: '🍌', start: DateTime.now().subtract(const Duration(days: 4)), end: DateTime.now().subtract(const Duration(days: 3)), status: 'Completed', trays: 5, weight: 4.2, targetTemp: 58),
+    BatchEvent(id: 'BATCH-004', crop: 'Chili', emoji: '🌶️', start: DateTime.now().subtract(const Duration(days: 1)), end: DateTime.now().add(const Duration(hours: 10)), status: 'Active', trays: 2, weight: 1.8, targetTemp: 50),
+    BatchEvent(id: 'BATCH-005', crop: 'Jackfruit', emoji: '🍈', start: DateTime.now().add(const Duration(days: 2)), end: DateTime.now().add(const Duration(days: 4)), status: 'Scheduled', trays: 6, weight: 7.0, targetTemp: 55),
   ];
 
   List<BatchEvent> _eventsForDay(DateTime day) {
@@ -84,15 +34,11 @@ class _CalendarPageState extends State<CalendarPage> {
   }
 
   bool _hasEvent(DateTime day) => _eventsForDay(day).isNotEmpty;
-
-  bool _isSameDay(DateTime a, DateTime b) =>
-      a.year == b.year && a.month == b.month && a.day == b.day;
-
+  bool _isSameDay(DateTime a, DateTime b) => a.year == b.year && a.month == b.month && a.day == b.day;
   String _formatDate(DateTime d) {
     const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     return '${d.day} ${months[d.month - 1]} ${d.year}';
   }
-
   String _formatDuration(Duration d) {
     if (d.inHours >= 1) return '${d.inHours}h ${d.inMinutes.remainder(60)}m';
     return '${d.inMinutes}m';
@@ -112,6 +58,16 @@ class _CalendarPageState extends State<CalendarPage> {
     }
   }
 
+  void _prevMonth() => setState(() {
+    _focusedMonth = DateTime(_focusedMonth.year, _focusedMonth.month - 1);
+    _selectedDay = null;
+  });
+
+  void _nextMonth() => setState(() {
+    _focusedMonth = DateTime(_focusedMonth.year, _focusedMonth.month + 1);
+    _selectedDay = null;
+  });
+
   AppBar _buildAppBar(bool isDark) {
     return AppBar(
       backgroundColor: Colors.transparent,
@@ -120,10 +76,7 @@ class _CalendarPageState extends State<CalendarPage> {
         icon: const Icon(Icons.arrow_back),
         onPressed: () => Navigator.of(context).pop(),
       ),
-      title: const Text(
-        'Batch Calendar',
-        style: TextStyle(fontWeight: FontWeight.bold),
-      ),
+      title: const Text('Batch Calendar', style: TextStyle(fontWeight: FontWeight.bold)),
       actions: [
         IconButton(
           icon: const Icon(Icons.today_rounded),
@@ -137,13 +90,38 @@ class _CalendarPageState extends State<CalendarPage> {
     );
   }
 
+  Widget _buildMonthHeader(bool isDark) {
+    const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          IconButton(icon: Icon(Icons.chevron_left, color: _accent(isDark)), onPressed: _prevMonth),
+          Expanded(
+            child: Text(
+              '${monthNames[_focusedMonth.month - 1]} ${_focusedMonth.year}',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: _text(isDark)),
+            ),
+          ),
+          IconButton(icon: Icon(Icons.chevron_right, color: _accent(isDark)), onPressed: _nextMonth),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF0B1120) : const Color(0xFFF6F8FC),
       appBar: _buildAppBar(isDark),
-      body: const Center(child: Text('Calendar')),
+      body: Column(
+        children: [
+          _buildMonthHeader(isDark),
+          const Expanded(child: Center(child: Text('Calendar grid coming'))),
+        ],
+      ),
     );
   }
 }
@@ -159,15 +137,5 @@ class BatchEvent {
   final double weight;
   final int targetTemp;
 
-  const BatchEvent({
-    required this.id,
-    required this.crop,
-    required this.emoji,
-    required this.start,
-    required this.end,
-    required this.status,
-    required this.trays,
-    required this.weight,
-    required this.targetTemp,
-  });
+  const BatchEvent({required this.id, required this.crop, required this.emoji, required this.start, required this.end, required this.status, required this.trays, required this.weight, required this.targetTemp});
 }
