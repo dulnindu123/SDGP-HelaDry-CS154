@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-
+// COMMIT MESSAGE: feat: register calendar route and wire dashboard button
 
 class CalendarPage extends StatefulWidget {
   const CalendarPage({super.key});
